@@ -1,7 +1,8 @@
 import { createRoot } from "react-dom/client";
-import { Provider } from "./store";
+import { Provider } from "./context/AppContext";
 import App from "./App";
-import "./styles.css";
+import "./styles/index.css";
+
 createRoot(document.getElementById("root")!).render(
   <Provider>
     <App />

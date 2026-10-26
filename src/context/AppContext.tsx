@@ -1,16 +1,14 @@
 import { createContext, useContext, useState, ReactNode } from "react";
-import {
-  Employee,
-  Occ,
-  OccStatus,
-  Page,
-  Rec,
-  Role,
-  employees0,
-  occurrences0,
-  records0,
-  now,
-} from "./data";
+import { Employee, Occ, OccStatus, Page, Rec, Role } from "../types";
+import { employees0, occurrences0, records0, now } from "../data/mockData";
+
+export const pageNames: Record<Page, string> = {
+  overview: "Visão operacional",
+  punch: "Central de Ponto",
+  employees: "Funcionários",
+  occurrences: "Ocorrências e justificativas",
+  assistant: "Assistente de IA",
+};
 
 export const roles: Record<
   Role,
@@ -56,7 +54,7 @@ export const roles: Record<
 export const SELF = "e1";
 export const MGR_DEPT = "Tecnologia";
 
-interface App {
+export interface AppContextValue {
   role: Role;
   setRole: (r: Role) => void;
   page: Page;
@@ -74,7 +72,7 @@ interface App {
   addOcc: (o: Omit<Occ, "id" | "requestedAt" | "history" | "status">) => void;
 }
 
-const Ctx = createContext<App>(null as unknown as App);
+const Ctx = createContext<AppContextValue>(null as unknown as AppContextValue);
 export const useApp = () => useContext(Ctx);
 
 export function Provider({ children }: { children: ReactNode }) {
@@ -114,7 +112,7 @@ export function Provider({ children }: { children: ReactNode }) {
       ? id === SELF
       : employees.find((e) => e.id === id)?.dept === MGR_DEPT);
 
-  const value: App = {
+  const value: AppContextValue = {
     role,
     setRole,
     page,
@@ -180,7 +178,9 @@ export function Provider({ children }: { children: ReactNode }) {
           ),
         );
       }
-      notify(`${label} — status atualizado para "${s}" e registrado no histórico.`);
+      notify(
+        `${label} — status atualizado para "${s}" e registrado no histórico.`,
+      );
     },
     addOcc: (o) => {
       const newOcc: Occ = {

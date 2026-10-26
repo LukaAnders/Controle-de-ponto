@@ -1,0 +1,82 @@
+.kpi-card {
+  gap: 8px;
+}
+
+.kpi-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.kpi-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mut);
+}
+
+.kpi-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.big {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--tx);
+  line-height: 1.1;
+}
+
+.kpi-unit {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--mut);
+}
+
+.kpi-foot {
+  font-size: 12px;
+  color: var(--mut);
+}
+
+.modality-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.modality-bar-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modality-bar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13.5px;
+}
+
+.modality-bar-desc {
+  color: var(--mut);
+  font-size: 12.5px;
+}
+
+.modality-pct {
+  color: var(--navy);
+  font-size: 14px;
+}
+
+.bar-track {
+  background: #e2e8f0;
+  height: 8px;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: var(--blue);
+  border-radius: 99px;
+}

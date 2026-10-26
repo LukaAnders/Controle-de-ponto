@@ -1,33 +1,16 @@
 import { useState } from "react";
-import { useApp, roles, SELF } from "../store";
-import { Page, formatDateBR, TODAY } from "../data";
-
-interface AssistantResponse {
-  intent: string;
-  generalGuidance: string;
-  userContextInfo: string;
-  links: { label: string; page: Page; query?: Record<string, string> }[];
-}
-
-interface ChatItem {
-  id: string;
-  question: string;
-  response: AssistantResponse;
-}
-
-const suggestedQuestions = [
-  "Como registro meu ponto?",
-  "Como justifico uma ausência?",
-  "Por que meu registro aparece incompleto?",
-  "Como funciona a autorização de home office?",
-  "Como consultar meu histórico de jornada?",
-  "Qual é o status da minha justificativa?",
-];
+import { useApp, roles, SELF } from "../../context/AppContext";
+import { formatDateBR, TODAY } from "../../data/mockData";
+import AssistantFaqSidebar from "./components/AssistantFaqSidebar";
+import AssistantChatPanel, {
+  AssistantResponse,
+  ChatItem,
+} from "./components/AssistantChatPanel";
+import "./Assistant.css";
 
 export default function Assistant() {
   const { go, role, employees, occs, recs } = useApp();
   const [history, setHistory] = useState<ChatItem[]>([]);
-  const [input, setInput] = useState("");
 
   const selfEmp = employees.find((e) => e.id === SELF) || employees[0];
   const openOccs = occs.filter(
@@ -206,7 +189,6 @@ export default function Assistant() {
         response: resp,
       },
     ]);
-    setInput("");
   };
 
   return (
@@ -215,7 +197,9 @@ export default function Assistant() {
         <div>
           <h1>Assistente Operacional PontoNexo (IA)</h1>
           <p className="sub">
-            Apoio informativo para dúvidas sobre modalidades de ponto, inconsistências e justificativas. Demonstração local sem envio de dados para APIs externas.
+            Apoio informativo para dúvidas sobre modalidades de ponto,
+            inconsistências e justificativas. Demonstração local sem envio de
+            dados para APIs externas.
           </p>
         </div>
         <span className="badge info">
@@ -224,128 +208,15 @@ export default function Assistant() {
       </div>
 
       <div className="assistant-layout">
-        {/* Left column: FAQ & Governance */}
-        <section className="card assistant-sidebar" aria-label="Perguntas frequentes e limites da IA">
-          <h2>Perguntas frequentes</h2>
-          <p className="sub" style={{ marginTop: 0 }}>
-            Selecione um tópico para simular a orientação contextualizada ao seu perfil de acesso:
-          </p>
-          <div className="faq-list">
-            {suggestedQuestions.map((q) => (
-              <button
-                key={q}
-                type="button"
-                className="faq-btn"
-                onClick={() => handleSend(q)}
-              >
-                <span>{q}</span>
-                <span aria-hidden="true">→</span>
-              </button>
-            ))}
-          </div>
+        <AssistantFaqSidebar onSelectQuestion={handleSend} />
 
-          <div className="info-box" style={{ marginTop: 12 }}>
-            <strong>Limites e Governança da IA</strong>
-            <ul className="compact-bullets">
-              <li>Respostas baseadas em regras mockadas locais.</li>
-              <li>Não inventa saldos de banco de horas nem dados pessoais.</li>
-              <li>Respeita o perfil selecionado no cabeçalho.</li>
-              <li>Não aprova nem rejeita justificativas automaticamente.</li>
-            </ul>
-          </div>
-        </section>
-
-        {/* Right column: Structured Consultation Panel */}
-        <section className="card assistant-main" aria-label="Painel de respostas do assistente">
-          <div className="assistant-welcome">
-            <div className="welcome-badge">ASSISTENTE DEMONSTRATIVO</div>
-            <h2>Olá, {roles[role].user}! Como posso orientar sua rotina hoje?</h2>
-            <p className="sub" style={{ margin: 0 }}>
-              Minhas respostas separam claramente as <b>Orientações gerais da plataforma</b> das <b>Informações contextuais permitidas ao seu perfil ({roles[role].label})</b>.
-            </p>
-          </div>
-
-          <div className="assistant-feed">
-            {history.length === 0 ? (
-              <div className="assistant-empty">
-                <strong>Nenhuma consulta realizada nesta sessão</strong>
-                <p>
-                  Clique em uma das perguntas sugeridas ao lado ou digite sua dúvida abaixo (por exemplo: <i>“Por que meu registro aparece incompleto?”</i> ou <i>“Como funciona a autorização de home office?”</i>).
-                </p>
-              </div>
-            ) : (
-              history.map((item) => (
-                <div key={item.id} className="qa-card">
-                  <div className="qa-question">
-                    <span className="qa-user-tag">Sua pergunta:</span>
-                    <strong>{item.question}</strong>
-                  </div>
-
-                  <div className="qa-answer">
-                    <div className="qa-intent">
-                      <span>Intenção identificada:</span>{" "}
-                      <b>{item.response.intent}</b>
-                    </div>
-
-                    <div className="qa-section">
-                      <small>ORIENTAÇÃO GERAL (POLÍTICA OPERACIONAL)</small>
-                      <p>{item.response.generalGuidance}</p>
-                    </div>
-
-                    <div className="qa-section contextual">
-                      <small>
-                        CONTEXTO DO PERFIL ATUAL ({roles[role].shortLabel.toUpperCase()})
-                      </small>
-                      <p>{item.response.userContextInfo}</p>
-                    </div>
-
-                    <div className="qa-actions">
-                      <span>Atalhos recomendados:</span>
-                      <div className="row">
-                        {item.response.links.map((lk, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            className="btn primary-outline"
-                            onClick={() => go(lk.page, lk.query)}
-                          >
-                            {lk.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          <div className="assistant-input-bar">
-            <input
-              aria-label="Digite sua pergunta para o assistente demonstrativo"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSend(input)}
-              placeholder="Digite uma dúvida sobre ponto, catraca, home office ou justificativas..."
-            />
-            <button
-              type="button"
-              className="btn primary"
-              onClick={() => handleSend(input)}
-            >
-              Enviar consulta
-            </button>
-            {history.length > 0 && (
-              <button
-                type="button"
-                className="btn"
-                onClick={() => setHistory([])}
-              >
-                Limpar
-              </button>
-            )}
-          </div>
-        </section>
+        <AssistantChatPanel
+          role={role}
+          history={history}
+          onSend={handleSend}
+          onClear={() => setHistory([])}
+          go={go}
+        />
       </div>
     </div>
   );
