@@ -62,17 +62,26 @@ export default function Sidebar({ onOpenPrivacy }: SidebarProps) {
       className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}
       aria-label="Menu lateral"
     >
-      <div className="brand">
-        <div className="brand-mark" title="PontoNexo · Gestão de Jornada">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="9" />
-            <polyline points="12 7 12 12 15.5 14" />
-          </svg>
-        </div>
-        {!sidebarCollapsed && (
-          <div className="brand-text">
-            <div className="logo">PontoNexo</div>
-            <div className="brand-sub">Workforce & Attendance</div>
+      <div
+        className="brand"
+        onClick={() => go(roles[role].pages[0])}
+        title="PontoNexo — Gestão de Jornada - SaaS"
+      >
+        {sidebarCollapsed ? (
+          <div className="brand-Collapsed-box">
+            <img
+              src="/logo-icon.png"
+              alt="PontoNexo"
+              className="brand-icon-img"
+            />
+          </div>
+        ) : (
+          <div className="brand-full-box">
+            <img
+              src="/logo-pontonexo.png"
+              alt="PontoNexo — Gestão de Jornada - SaaS"
+              className="brand-full-img"
+            />
           </div>
         )}
       </div>
