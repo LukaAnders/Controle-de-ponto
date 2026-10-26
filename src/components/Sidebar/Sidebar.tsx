@@ -138,3 +138,4 @@ export default function Sidebar({ onOpenPrivacy }: SidebarProps) {
     </aside>
   );
 }
+

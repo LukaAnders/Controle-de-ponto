@@ -76,3 +76,4 @@ export type Page =
   | "assistant";
 
 export type Role = "rh" | "gestor" | "funcionario";
+

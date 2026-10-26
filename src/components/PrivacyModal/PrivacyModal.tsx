@@ -53,3 +53,4 @@ export default function PrivacyModal({ open, onClose }: PrivacyModalProps) {
     </div>
   );
 }
+
