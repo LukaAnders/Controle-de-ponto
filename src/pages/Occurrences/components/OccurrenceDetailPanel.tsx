@@ -6,22 +6,22 @@ import { statusBadgeClass } from "./OccurrenceTable";
 const actionsList: { label: string; nextStatus: OccStatus; variant: string }[] =
   [
     {
-      label: "Aprovar justificativa",
+      label: "Aprovar",
       nextStatus: "Aprovada",
       variant: "primary",
     },
     {
-      label: "Rejeitar justificativa",
+      label: "Rejeitar",
       nextStatus: "Rejeitada",
       variant: "danger",
     },
     {
-      label: "Solicitar informações adicionais",
+      label: "Solicitar info",
       nextStatus: "Em análise",
       variant: "",
     },
     {
-      label: "Encaminhar para revisão",
+      label: "Revisão",
       nextStatus: "Encaminhada para revisão",
       variant: "",
     },
@@ -31,6 +31,7 @@ interface OccurrenceDetailPanelProps {
   occurrence: Occ;
   employee?: Employee;
   role: Role;
+  onClose: () => void;
   actOcc: (id: string, s: OccStatus, label: string, note?: string) => void;
 }
 
@@ -38,6 +39,7 @@ export default function OccurrenceDetailPanel({
   occurrence,
   employee,
   role,
+  onClose,
   actOcc,
 }: OccurrenceDetailPanelProps) {
   const [pendAction, setPendAction] = useState<{
@@ -53,115 +55,87 @@ export default function OccurrenceDetailPanel({
 
   return (
     <aside
-      className="card panel"
+      className="card panel occ-detail-panel"
       aria-label={`Detalhes da ocorrência ${occurrence.id}`}
     >
       <div className="panel-header">
         <div>
           <span className="modality-tag">
-            PROTOCOLO #{occurrence.id.toUpperCase()} ·{" "}
             {typeLabel[occurrence.type].toUpperCase()}
           </span>
           <h2>{occurrence.summary}</h2>
         </div>
-        <span className={`badge ${statusBadgeClass(occurrence.status)}`}>
-          {occurrence.status}
-        </span>
+        <div className="row">
+          <span className={`badge ${statusBadgeClass(occurrence.status)}`}>
+            {occurrence.status}
+          </span>
+          <button type="button" className="btn" onClick={onClose}>
+            ✕
+          </button>
+        </div>
       </div>
 
-      <div className="detail-grid">
+      {/* Compact Meta Strip */}
+      <div className="occ-summary-meta">
         <div>
-          <small>Funcionário</small>
+          <small>Colaborador</small>
           <strong>
-            {employee?.name} (Mat. {employee?.reg})
+            {employee?.name} ({employee?.dept})
           </strong>
         </div>
         <div>
-          <small>Setor e Cargo</small>
-          <strong>
-            {employee?.dept} · {employee?.role}
-          </strong>
-        </div>
-        <div>
-          <small>Data e horário relacionado</small>
+          <small>Data e horário</small>
           <strong>
             {formatDateBR(occurrence.date)} · {occurrence.relatedTime}
           </strong>
         </div>
-        <div>
-          <small>Data da solicitação / prioridade</small>
-          <strong>
-            {occurrence.requestedAt} ({occurrence.priority})
-          </strong>
-        </div>
       </div>
 
+      {/* Justification */}
       <div className="detail-block">
-        <h3>Justificativa apresentada</h3>
+        <h3>Justificativa enviada</h3>
         <p className="quote-box">“{occurrence.justification}”</p>
       </div>
 
+      {/* Involved Records as Clean Chips */}
       <div className="detail-block">
-        <h3>Registros envolvidos no dia</h3>
-        <ul className="records-list">
+        <h3>Marcações do dia</h3>
+        <div className="record-chips">
           {occurrence.involvedRecords.map((rec, idx) => (
-            <li key={idx}>{rec}</li>
+            <span key={idx} className="record-chip">
+              {rec}
+            </span>
           ))}
-        </ul>
+        </div>
       </div>
 
-      <div className="detail-block">
-        <h3>Observações relevantes</h3>
-        <p className="sub" style={{ margin: 0 }}>
-          {occurrence.notes}
+      {/* Streamlined AI Support Block */}
+      <div className="note">
+        <div className="ai-suggestion-header">
+          <strong>Sugestão do assistente (IA)</strong>
+          <span className="badge info">Apoio informativo</span>
+        </div>
+        <p className="ai-compact-text">
+          {occurrence.aiAnalysis.problemSummary}{" "}
+          <b>Próximo passo sugerido:</b> {occurrence.aiAnalysis.nextSteps}
         </p>
       </div>
 
-      <div className="note ai-suggestion-box">
-        <div className="ai-suggestion-header">
-          <strong>Sugestão do assistente</strong>
-          <span className="badge info">
-            Apoio informativo · Não é decisão automática
-          </span>
-        </div>
-        <div className="ai-grid">
-          <div>
-            <small>Resumo do problema:</small>
-            <p>{occurrence.aiAnalysis.problemSummary}</p>
-          </div>
-          <div>
-            <small>Informações que precisam ser verificadas:</small>
-            <p>{occurrence.aiAnalysis.toVerify}</p>
-          </div>
-          <div>
-            <small>Possíveis próximos passos:</small>
-            <p>{occurrence.aiAnalysis.nextSteps}</p>
-          </div>
-          <div>
-            <small>Dados ausentes que precisam ser solicitados:</small>
-            <p>{occurrence.aiAnalysis.missingData}</p>
-          </div>
-        </div>
-      </div>
-
-      {role !== "funcionario" ? (
+      {/* Actions for RH / Gestor */}
+      {role !== "funcionario" && (
         <div className="detail-block">
-          <h3>Deliberação administrativa (simulada)</h3>
+          <h3>Deliberação do RH / Liderança</h3>
           {pendAction ? (
             <div
               className="confirm-box"
               role="region"
               aria-label="Confirmação de ação"
             >
-              <strong>Confirmar ação: “{pendAction.label}”?</strong>
-              <p className="sub" style={{ margin: "4px 0 8px" }}>
-                O status passará para <b>{pendAction.nextStatus}</b> e a ação
-                será gravada no histórico de auditoria.
-              </p>
-              <label style={{ marginBottom: 8 }}>
-                Observação do responsável (opcional)
+              <strong>Confirmar “{pendAction.label}”?</strong>
+              <label style={{ margin: "8px 0" }}>
+                Observação (opcional)
                 <input
-                  placeholder="Ex.: Comprovante conferido pelo RH"
+                  placeholder="Ex.: Comprovante conferido"
                   value={actionNote}
                   onChange={(e) => setActionNote(e.target.value)}
                 />
@@ -181,7 +155,7 @@ export default function OccurrenceDetailPanel({
                     setActionNote("");
                   }}
                 >
-                  Confirmar deliberação
+                  Confirmar
                 </button>
                 <button
                   type="button"
@@ -196,7 +170,7 @@ export default function OccurrenceDetailPanel({
               </div>
             </div>
           ) : (
-            <div className="action-buttons-grid">
+            <div className="action-buttons-row">
               {actionsList.map((act) => (
                 <button
                   key={act.label}
@@ -210,27 +184,19 @@ export default function OccurrenceDetailPanel({
             </div>
           )}
         </div>
-      ) : (
-        <div className="info-box">
-          <strong>Visão do Funcionário</strong>
-          <p>
-            A deliberação sobre justificativas é restrita ao RH e à liderança.
-            Você pode acompanhar todas as atualizações no histórico abaixo.
-          </p>
-        </div>
       )}
 
+      {/* Compact Audit History */}
       <div className="detail-block">
-        <h3>Histórico de alterações ({occurrence.history.length})</h3>
+        <h3>Histórico ({occurrence.history.length})</h3>
         <ul className="audit-timeline">
           {occurrence.history.map((h, i) => (
             <li key={i}>
-              <div className="audit-top">
-                <strong>{h.action}</strong>
-                <span>{h.at}</span>
+              <div>
+                <strong>{h.action}</strong> · <span>{h.by}</span>
+                {h.note && <div className="cell-sub">“{h.note}”</div>}
               </div>
-              <div className="audit-by">Responsável: {h.by}</div>
-              {h.note && <div className="audit-note">Nota: “{h.note}”</div>}
+              <span className="audit-time">{h.at}</span>
             </li>
           ))}
         </ul>
@@ -238,4 +204,3 @@ export default function OccurrenceDetailPanel({
     </aside>
   );
 }
-

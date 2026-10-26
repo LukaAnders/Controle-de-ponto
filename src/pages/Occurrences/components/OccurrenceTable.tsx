@@ -50,24 +50,14 @@ export default function OccurrenceTable({
 
   return (
     <div className="card scroll">
-      <div className="section-header" style={{ marginBottom: 4 }}>
-        <h2>Ocorrências listadas ({list.length})</h2>
-        <small className="sub" style={{ margin: 0 }}>
-          Selecione uma linha para inspecionar os registros envolvidos, sugestão
-          da IA e histórico.
-        </small>
-      </div>
       <table>
         <thead>
           <tr>
-            <th>Funcionário</th>
-            <th>Tipo da ocorrência</th>
+            <th>Colaborador</th>
+            <th>Ocorrência</th>
             <th>Data e Horário</th>
-            <th>Motivo / Resumo</th>
-            <th>Solicitação</th>
-            <th>Status</th>
-            <th>Prioridade</th>
-            <th>Ação</th>
+            <th>Status e Prioridade</th>
+            <th style={{ textAlign: "right" }}>Ação</th>
           </tr>
         </thead>
         <tbody>
@@ -75,7 +65,12 @@ export default function OccurrenceTable({
             const emp = getEmp(x.empId);
             const isSelected = selectedId === x.id;
             return (
-              <tr key={x.id} className={isSelected ? "selected-row" : ""}>
+              <tr
+                key={x.id}
+                className={isSelected ? "selected-row" : ""}
+                style={{ cursor: "pointer" }}
+                onClick={() => onSelect(isSelected ? "" : x.id)}
+              >
                 <td>
                   <div className="emp-cell">
                     <div className={`emp-avatar alt-${idx % 4}`}>
@@ -92,31 +87,33 @@ export default function OccurrenceTable({
                   </div>
                 </td>
                 <td>
-                  <strong>{typeLabel[x.type]}</strong>
+                  <strong>{x.summary}</strong>
+                  <div className="cell-sub">{typeLabel[x.type]}</div>
                 </td>
                 <td>
                   <strong>{formatDateBR(x.date)}</strong>
                   <div className="cell-sub">{x.relatedTime}</div>
                 </td>
-                <td>{x.summary}</td>
-                <td className="muted-cell">{x.requestedAt}</td>
                 <td>
-                  <span className={`badge ${statusBadgeClass(x.status)}`}>
-                    {x.status}
-                  </span>
+                  <div className="row" style={{ gap: 6 }}>
+                    <span className={`badge ${statusBadgeClass(x.status)}`}>
+                      {x.status}
+                    </span>
+                    <span className={`badge ${priorityBadgeClass(x.priority)}`}>
+                      {x.priority}
+                    </span>
+                  </div>
                 </td>
-                <td>
-                  <span className={`badge ${priorityBadgeClass(x.priority)}`}>
-                    {x.priority}
-                  </span>
-                </td>
-                <td>
+                <td
+                  style={{ textAlign: "right" }}
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <button
                     type="button"
                     className={`btn ${isSelected ? "primary-outline" : ""}`}
-                    onClick={() => onSelect(x.id)}
+                    onClick={() => onSelect(isSelected ? "" : x.id)}
                   >
-                    Detalhes
+                    {isSelected ? "Fechar" : "Ver detalhes"}
                   </button>
                 </td>
               </tr>
@@ -124,7 +121,7 @@ export default function OccurrenceTable({
           })}
           {!list.length && (
             <tr>
-              <td colSpan={8} className="empty-cell">
+              <td colSpan={5} className="empty-cell">
                 Nenhuma ocorrência encontrada com os filtros selecionados.
               </td>
             </tr>

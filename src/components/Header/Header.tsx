@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useApp, roles, pageNames } from "../../context/AppContext";
+import { useApp, roles } from "../../context/AppContext";
 import { typeLabel } from "../../data/mockData";
 import { Role } from "../../types";
 import "./Header.css";
@@ -8,7 +8,6 @@ export default function Header() {
   const {
     role,
     setRole,
-    page,
     go,
     occs,
     employees,
@@ -47,58 +46,18 @@ export default function Header() {
           </svg>
         </button>
 
-        <div className="header-title-block">
-          <span className="header-section-title">{pageNames[page]}</span>
-          <span
-            className="demo-pill"
-            title="Todos os dados e equipamentos são simulados localmente"
-          >
-            Segunda-feira, 26 Out · Demonstrativo
-          </span>
-        </div>
+        <span className="header-date-context">
+          Segunda-feira, 26 de outubro de 2026
+        </span>
+        <span
+          className="demo-pill"
+          title="Todos os dados e equipamentos são simulados localmente"
+        >
+          Ambiente Demonstrativo
+        </span>
       </div>
 
       <div className="header-right">
-        <div
-          className="header-quick-cluster"
-          aria-label="Atalhos rápidos de operação"
-        >
-          <span className="header-live-timer" title="Turno corporativo ativo">
-            08:44:36
-          </span>
-          <button
-            type="button"
-            className="quick-circle-btn green"
-            title="Simular registro de entrada (Central de Ponto)"
-            onClick={() => go("punch")}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-              <polygon points="5 3 19 12 5 21 5 3" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            className="quick-circle-btn amber"
-            title="Revisar ocorrências e intervalos pendentes"
-            onClick={() => go("occurrences", { open: "1" })}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
-              <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            className="quick-circle-btn crimson"
-            title="Abrir Assistente Operacional de IA"
-            onClick={() => go("assistant")}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-          </button>
-        </div>
-
         <div
           className="role-segmented-control"
           role="group"

@@ -10,8 +10,6 @@ interface OccurrenceFiltersProps {
   setTy: (v: string) => void;
   deptFilter: string;
   setDeptFilter: (v: string) => void;
-  periodFilter: string;
-  setPeriodFilter: (v: string) => void;
   prioFilter: string;
   setPrioFilter: (v: string) => void;
   role: Role;
@@ -27,42 +25,69 @@ export default function OccurrenceFilters({
   setTy,
   deptFilter,
   setDeptFilter,
-  periodFilter,
-  setPeriodFilter,
   prioFilter,
   setPrioFilter,
   role,
   onClear,
 }: OccurrenceFiltersProps) {
+  const hasFilters = Boolean(search || st || ty || deptFilter || prioFilter);
+
   return (
-    <div className="card filter-bar">
-      <label className="filter-item grow">
-        <span>Buscar</span>
+    <div className="occ-toolbar">
+      <div className="occ-status-tabs" role="tablist" aria-label="Filtrar por situação">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={st === ""}
+          className={`occ-tab-btn ${st === "" ? "active" : ""}`}
+          onClick={() => setSt("")}
+        >
+          Todas
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={st === "abertas"}
+          className={`occ-tab-btn ${st === "abertas" ? "active" : ""}`}
+          onClick={() => setSt("abertas")}
+        >
+          Pendentes
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={st === "Aprovada"}
+          className={`occ-tab-btn ${st === "Aprovada" ? "active" : ""}`}
+          onClick={() => setSt("Aprovada")}
+        >
+          Aprovadas
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={st === "Rejeitada"}
+          className={`occ-tab-btn ${st === "Rejeitada" ? "active" : ""}`}
+          onClick={() => setSt("Rejeitada")}
+        >
+          Rejeitadas
+        </button>
+      </div>
+
+      <div className="occ-inline-filters">
         <input
-          placeholder="Funcionário ou resumo..."
+          className="occ-search-input"
+          aria-label="Buscar por funcionário ou motivo"
+          placeholder="Buscar funcionário ou motivo..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-      </label>
 
-      <label className="filter-item">
-        <span>Status</span>
-        <select value={st} onChange={(e) => setSt(e.target.value)}>
-          <option value="">Todos os status</option>
-          <option value="abertas">Abertas (Pendente + Em análise)</option>
-          <option value="Pendente">Pendente</option>
-          <option value="Em análise">Em análise</option>
-          <option value="Aprovada">Aprovada</option>
-          <option value="Rejeitada">Rejeitada</option>
-          <option value="Encaminhada para revisão">
-            Encaminhada para revisão
-          </option>
-        </select>
-      </label>
-
-      <label className="filter-item">
-        <span>Tipo de ocorrência</span>
-        <select value={ty} onChange={(e) => setTy(e.target.value)}>
+        <select
+          className="occ-select"
+          aria-label="Filtrar por tipo de ocorrência"
+          value={ty}
+          onChange={(e) => setTy(e.target.value)}
+        >
           <option value="">Todos os tipos</option>
           {(Object.keys(typeLabel) as OccType[]).map((t) => (
             <option key={t} value={t}>
@@ -70,14 +95,12 @@ export default function OccurrenceFilters({
             </option>
           ))}
         </select>
-      </label>
 
-      {role !== "funcionario" && (
-        <label className="filter-item">
-          <span>Setor</span>
+        {role === "rh" && (
           <select
+            className="occ-select"
+            aria-label="Filtrar por setor"
             value={deptFilter}
-            disabled={role === "gestor"}
             onChange={(e) => setDeptFilter(e.target.value)}
           >
             <option value="">Todos os setores</option>
@@ -87,46 +110,26 @@ export default function OccurrenceFilters({
               </option>
             ))}
           </select>
-        </label>
-      )}
+        )}
 
-      <label className="filter-item">
-        <span>Período</span>
         <select
-          value={periodFilter}
-          onChange={(e) => setPeriodFilter(e.target.value)}
-        >
-          <option value="">Todas as datas</option>
-          <option value="hoje">Hoje (26/10/2026)</option>
-          <option value="recentes">Últimos 3 dias (24 a 26/10)</option>
-          <option value="outubro">Outubro / 2026</option>
-        </select>
-      </label>
-
-      <label className="filter-item">
-        <span>Prioridade</span>
-        <select
+          className="occ-select"
+          aria-label="Filtrar por prioridade"
           value={prioFilter}
           onChange={(e) => setPrioFilter(e.target.value)}
         >
-          <option value="">Todas</option>
-          <option value="Alta">Alta</option>
-          <option value="Média">Média</option>
-          <option value="Baixa">Baixa</option>
+          <option value="">Prioridade: Todas</option>
+          <option value="Alta">Prioridade: Alta</option>
+          <option value="Média">Prioridade: Média</option>
+          <option value="Baixa">Prioridade: Baixa</option>
         </select>
-      </label>
 
-      {(st || ty || deptFilter || periodFilter || prioFilter || search) && (
-        <button
-          type="button"
-          className="btn"
-          style={{ alignSelf: "flex-end" }}
-          onClick={onClear}
-        >
-          Limpar
-        </button>
-      )}
+        {hasFilters && (
+          <button type="button" className="btn" onClick={onClear}>
+            Limpar
+          </button>
+        )}
+      </div>
     </div>
   );
 }
-

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useApp, SELF } from "../../context/AppContext";
-import { TODAY } from "../../data/mockData";
 import OccurrenceFilters from "./components/OccurrenceFilters";
 import OccurrenceTable from "./components/OccurrenceTable";
 import OccurrenceDetailPanel from "./components/OccurrenceDetailPanel";
@@ -12,7 +11,6 @@ export default function Occurrences() {
   const [st, setSt] = useState(query.open ? "abertas" : "");
   const [ty, setTy] = useState(query.type || "");
   const [deptFilter, setDeptFilter] = useState("");
-  const [periodFilter, setPeriodFilter] = useState("");
   const [prioFilter, setPrioFilter] = useState("");
   const [search, setSearch] = useState("");
   const [sel, setSel] = useState(query.sel || "");
@@ -36,29 +34,16 @@ export default function Occurrences() {
     const matchType = !ty || o.type === ty;
     const matchDept = !deptFilter || emp?.dept === deptFilter;
     const matchPrio = !prioFilter || o.priority === prioFilter;
-    const matchPeriod =
-      !periodFilter ||
-      (periodFilter === "hoje" && o.date === TODAY) ||
-      (periodFilter === "recentes" && o.date >= "2026-10-24") ||
-      (periodFilter === "outubro" && o.date.startsWith("2026-10"));
     const matchSearch =
       !search ||
       (emp?.name + " " + o.summary + " " + o.justification)
         .toLowerCase()
         .includes(search.toLowerCase());
 
-    return (
-      matchStatus &&
-      matchType &&
-      matchDept &&
-      matchPrio &&
-      matchPeriod &&
-      matchSearch
-    );
+    return matchStatus && matchType && matchDept && matchPrio && matchSearch;
   });
 
-  const selectedOcc =
-    occs.find((x) => x.id === sel) || (list.length > 0 ? list[0] : null);
+  const selectedOcc = occs.find((x) => x.id === sel) || null;
   const selectedEmp = selectedOcc ? getEmp(selectedOcc.empId) : undefined;
 
   return (
@@ -68,8 +53,8 @@ export default function Occurrences() {
           <h1>Ocorrências e justificativas</h1>
           <p className="sub">
             {role === "funcionario"
-              ? "Acompanhe suas ocorrências de jornada e envie justificativas para análise do RH."
-              : "Central de análise de inconsistências de jornada, justificativas de ausência e autorizações de home office."}
+              ? "Acompanhe suas solicitações de jornada e envie justificativas para o RH."
+              : "Analise inconsistências de ponto, justificativas de ausência e pedidos de home office."}
           </p>
         </div>
         <button
@@ -77,7 +62,7 @@ export default function Occurrences() {
           className="btn primary"
           onClick={() => setShowNewModal(true)}
         >
-          + Nova justificativa / solicitação
+          + Nova justificativa
         </button>
       </div>
 
@@ -90,8 +75,6 @@ export default function Occurrences() {
         setTy={setTy}
         deptFilter={deptFilter}
         setDeptFilter={setDeptFilter}
-        periodFilter={periodFilter}
-        setPeriodFilter={setPeriodFilter}
         prioFilter={prioFilter}
         setPrioFilter={setPrioFilter}
         role={role}
@@ -99,7 +82,6 @@ export default function Occurrences() {
           setSt("");
           setTy("");
           setDeptFilter("");
-          setPeriodFilter("");
           setPrioFilter("");
           setSearch("");
         }}
@@ -118,6 +100,7 @@ export default function Occurrences() {
             occurrence={selectedOcc}
             employee={selectedEmp}
             role={role}
+            onClose={() => setSel("")}
             actOcc={actOcc}
           />
         )}
@@ -132,4 +115,3 @@ export default function Occurrences() {
     </div>
   );
 }
-

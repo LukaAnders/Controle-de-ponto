@@ -3,8 +3,8 @@
   justify-content: space-between;
   align-items: center;
   gap: 16px;
-  padding: 12px 32px;
-  min-height: 68px;
+  padding: 10px 32px;
+  min-height: 60px;
   background: var(--surface);
   border-bottom: 1px solid var(--bd);
   position: sticky;
@@ -15,13 +15,13 @@
 .header-left {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .sidebar-toggle-btn {
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   border-radius: 8px;
   border: 1px solid var(--bd);
   background: #f8fafc;
@@ -38,87 +38,29 @@
   background: var(--blue-soft);
 }
 
-.header-title-block {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.header-section-title {
-  font-weight: 700;
-  font-size: 18px;
-  letter-spacing: -0.02em;
-  color: var(--tx);
+.header-date-context {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mut);
 }
 
 .demo-pill {
   font-size: 11px;
   font-weight: 600;
   color: #1e40af;
-  background: #dbeafe;
+  background: #eff6ff;
   border: 1px solid #bfdbfe;
-  padding: 3px 10px;
+  padding: 2px 9px;
   border-radius: 99px;
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
-/* Quick Action Cluster inspired by Jibble top-right */
-.header-quick-cluster {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-right: 14px;
-  border-right: 1px solid var(--bd);
-}
-
-.header-live-timer {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--tx);
-  font-variant-numeric: tabular-nums;
-  margin-right: 4px;
-}
-
-.quick-circle-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 0;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  color: #ffffff;
-  transition: transform 0.12s ease, opacity 0.12s ease;
-}
-
-.quick-circle-btn:hover {
-  transform: translateY(-1px);
-  opacity: 0.92;
-}
-
-.quick-circle-btn.green {
-  background: #16a34a;
-  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
-}
-
-.quick-circle-btn.amber {
-  background: #f59e0b;
-  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3);
-}
-
-.quick-circle-btn.crimson {
-  background: #e11d48;
-  box-shadow: 0 2px 6px rgba(225, 29, 72, 0.3);
-}
-
-/* Segmented Role Control inspired by Organization / Managed by me / Personal */
 .role-segmented-control {
   display: inline-flex;
   background: #f1f5f9;
@@ -150,7 +92,7 @@
   background: #ffffff;
   color: var(--blue);
   border-color: #bfdbfe;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
 }
 
 .notif-wrapper {
@@ -159,9 +101,9 @@
 
 .icon-btn {
   position: relative;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
   border: 1px solid var(--bd);
   background: #f8fafc;
   color: var(--tx);
@@ -190,7 +132,7 @@
   position: absolute;
   right: 0;
   top: calc(100% + 10px);
-  width: 360px;
+  width: 350px;
   background: var(--surface);
   border: 1px solid var(--bd);
   border-radius: 12px;
@@ -257,12 +199,6 @@
   font-size: 13px;
   color: var(--mut);
   padding: 8px 4px;
-}
-
-@media (max-width: 1100px) {
-  .header-quick-cluster {
-    display: none;
-  }
 }
 
 @media (max-width: 860px) {
