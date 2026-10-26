@@ -33,7 +33,7 @@ export default function Employees() {
   const [s, setS] = useState("");
   const [m, setM] = useState("");
   const [ed, setEd] = useState<Employee | null>(null);
-  const [detailId, setDetailId] = useState<string>("e1");
+  const [detailId, setDetailId] = useState<string>("");
   const [err, setErr] = useState("");
 
   const list = employees.filter(
@@ -100,13 +100,17 @@ export default function Employees() {
           <h1>Funcionários e Escalas</h1>
           <p className="sub">
             {role === "gestor"
-              ? "Consulta de colaboradores e escalas alocados no setor de Tecnologia."
-              : "Gerencie o quadro de funcionários fictícios, escalas semanais e autorizações de home office."}
+              ? "Consulte os colaboradores e as escalas do setor de Tecnologia."
+              : "Consulte o quadro de colaboradores, escalas semanais e permissões de home office."}
           </p>
         </div>
 
         <div className="page-header-actions">
-          <div className="view-tabs" role="tablist" aria-label="Modo de visualização">
+          <div
+            className="view-tabs"
+            role="tablist"
+            aria-label="Modo de visualização"
+          >
             <button
               type="button"
               role="tab"
@@ -114,7 +118,7 @@ export default function Employees() {
               className={`view-tab-btn ${viewMode === "table" ? "active" : ""}`}
               onClick={() => setViewMode("table")}
             >
-              Lista Cadastral
+              Lista ({list.length})
             </button>
             <button
               type="button"
@@ -123,7 +127,7 @@ export default function Employees() {
               className={`view-tab-btn ${viewMode === "schedule" ? "active" : ""}`}
               onClick={() => setViewMode("schedule")}
             >
-              Grade de Escalas (Semana)
+              Escala Semanal
             </button>
           </div>
 
@@ -168,7 +172,6 @@ export default function Employees() {
             role={role}
             onSelectDetail={setDetailId}
             onEdit={handleOpenEdit}
-            onToggleActive={(e) => saveEmployee({ ...e, active: !e.active })}
           />
         ) : (
           <EmployeeScheduleGrid
@@ -186,6 +189,7 @@ export default function Employees() {
             role={role}
             onClose={() => setDetailId("")}
             onEdit={handleOpenEdit}
+            onToggleActive={(e) => saveEmployee({ ...e, active: !e.active })}
             go={go}
           />
         )}

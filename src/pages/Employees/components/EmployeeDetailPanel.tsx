@@ -8,6 +8,7 @@ interface EmployeeDetailPanelProps {
   role: Role;
   onClose: () => void;
   onEdit: (e: Employee) => void;
+  onToggleActive: (e: Employee) => void;
   go: (p: Page, q?: Record<string, string>) => void;
 }
 
@@ -18,112 +19,123 @@ export default function EmployeeDetailPanel({
   role,
   onClose,
   onEdit,
+  onToggleActive,
   go,
 }: EmployeeDetailPanelProps) {
   return (
-    <aside className="card panel" aria-label={`Detalhes de ${employee.name}`}>
+    <aside
+      className="card panel emp-detail-panel"
+      aria-label={`Ficha de ${employee.name}`}
+    >
       <div className="panel-header">
         <div>
           <span className="modality-tag">FICHA DO COLABORADOR</span>
           <h2>{employee.name}</h2>
-          <p className="sub" style={{ margin: 0 }}>
-            Matrícula {employee.reg} · {employee.role} ({employee.dept})
-          </p>
         </div>
-        <button type="button" className="btn" onClick={onClose}>
-          Fechar
-        </button>
+        <div className="row">
+          <span className={`badge ${employee.active ? "ok" : "bad"}`}>
+            {employee.active ? "Ativo" : "Inativo"}
+          </span>
+          <button type="button" className="btn" onClick={onClose}>
+            ✕
+          </button>
+        </div>
       </div>
 
-      <div className="detail-grid">
+      <div className="emp-summary-meta">
         <div>
-          <small>Modalidade contratual</small>
-          <strong>{employee.mode}</strong>
+          <small>Matrícula e Setor</small>
+          <strong>
+            Mat. {employee.reg} · {employee.dept}
+          </strong>
         </div>
         <div>
-          <small>Situação cadastral</small>
-          <div>
-            <span className={`badge ${employee.active ? "ok" : "bad"}`}>
-              {employee.active ? "Ativo" : "Inativo"}
-            </span>
-          </div>
+          <small>Cargo e Regime</small>
+          <strong>
+            {employee.role} ({employee.mode})
+          </strong>
         </div>
         <div style={{ gridColumn: "1 / -1" }}>
-          <small>Escala demonstrativa</small>
+          <small>Escala contratual</small>
           <strong>{employee.schedule}</strong>
         </div>
       </div>
 
       <div className="info-box">
-        <strong>Autorização de Ponto Digital em Home Office</strong>
-        {employee.remote.allowed ? (
-          <p>
-            Status:{" "}
-            {employee.remote.until >= TODAY ? (
-              <b style={{ color: "var(--ok)" }}>Ativa e válida</b>
+        <div className="section-header">
+          <strong>Ponto Digital em Home Office</strong>
+          {employee.remote.allowed ? (
+            employee.remote.until >= TODAY ? (
+              <span className="badge ok">
+                Válido até {formatDateBR(employee.remote.until)}
+              </span>
             ) : (
-              <b style={{ color: "var(--bad)" }}>Expirada</b>
-            )}
-            <br />
-            Validade: <b>{formatDateBR(employee.remote.until)}</b>
-            <br />
-            Responsável pela liberação: <b>{employee.remote.by}</b>
-          </p>
-        ) : (
-          <p>
-            Este funcionário <b>não possui</b> autorização ativa para registrar
-            ponto digital fora das dependências da empresa.
-          </p>
-        )}
+              <span className="badge bad">
+                Vencido em {formatDateBR(employee.remote.until)}
+              </span>
+            )
+          ) : (
+            <span className="badge">Sem permissão</span>
+          )}
+        </div>
+        <p style={{ marginTop: 6 }}>
+          {employee.remote.allowed
+            ? `Autorizado por: ${employee.remote.by}.`
+            : "Sem liberação ativa para registrar ponto digital fora da empresa."}
+        </p>
         {role === "rh" && (
-          <div style={{ marginTop: 8 }}>
+          <div className="row" style={{ marginTop: 10 }}>
             <button
               type="button"
               className="btn primary-outline"
               onClick={() => onEdit(employee)}
             >
-              Configurar permissão remota
+              Editar cadastro / permissão
+            </button>
+            <button
+              type="button"
+              className="btn"
+              onClick={() => onToggleActive(employee)}
+            >
+              {employee.active ? "Desativar cadastro" : "Reativar cadastro"}
             </button>
           </div>
         )}
       </div>
 
-      <div>
-        <h3>Registros recentes ({empRecs.length})</h3>
+      <div className="detail-block">
+        <h3>Últimos registros ({empRecs.length})</h3>
         {empRecs.length > 0 ? (
-          <ul className="compact-list">
+          <div className="emp-chip-list">
             {empRecs.slice(0, 4).map((r) => (
-              <li key={r.id}>
-                <span>
-                  <b>{r.time}</b> — {r.modality} ({r.kind})
-                </span>
-                <span className="badge ok">{r.status}</span>
-              </li>
+              <span key={r.id} className="emp-record-chip">
+                <b>{r.time.split(" ")[1]}</b> · {r.modality} ({r.kind})
+              </span>
             ))}
-          </ul>
+          </div>
         ) : (
-          <p className="sub">
-            Nenhum registro recente simulado para este funcionário.
-          </p>
+          <p className="sub">Nenhum registro recente simulado.</p>
         )}
       </div>
 
-      <div>
-        <h3>Ocorrências associadas ({empOccs.length})</h3>
+      <div className="detail-block">
+        <h3>Ocorrências vinculadas ({empOccs.length})</h3>
         {empOccs.length > 0 ? (
           <ul className="compact-list">
             {empOccs.map((o) => (
               <li key={o.id}>
                 <div>
-                  <b>{formatDateBR(o.date)}</b> · {typeLabel[o.type]}
-                  <div className="cell-sub">{o.summary}</div>
+                  <strong>{o.summary}</strong>
+                  <div className="cell-sub">
+                    {formatDateBR(o.date)} · {typeLabel[o.type]}
+                  </div>
                 </div>
                 <button
                   type="button"
                   className="btn"
                   onClick={() => go("occurrences", { sel: o.id })}
                 >
-                  Abrir ({o.status})
+                  {o.status} →
                 </button>
               </li>
             ))}
@@ -135,4 +147,3 @@ export default function EmployeeDetailPanel({
     </aside>
   );
 }
-

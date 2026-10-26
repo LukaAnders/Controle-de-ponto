@@ -1,30 +1,64 @@
-.compact-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.compact-list li {
+/* Clean Toolbar with Mode Tabs + Inline Filters */
+.emp-toolbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  padding: 9px 11px;
-  background: #f8fafc;
-  border: 1px solid var(--bd);
-  border-radius: 8px;
-  font-size: 12.5px;
-}
-
-.view-tabs-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
+  gap: 14px;
   flex-wrap: wrap;
+  background: var(--surface);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  padding: 12px 18px;
+}
+
+.emp-mode-tabs {
+  display: inline-flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 8px;
+  gap: 2px;
+}
+
+.emp-tab-btn {
+  border: 0;
+  background: transparent;
+  color: var(--mut);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.emp-tab-btn:hover {
+  color: var(--tx);
+}
+
+.emp-tab-btn.active {
+  background: #ffffff;
+  color: var(--blue);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.emp-inline-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.emp-search-input {
+  min-width: 230px;
+  background: #f8fafc;
+}
+
+.emp-select {
+  background: #f8fafc;
+  font-size: 13px;
 }
 
 .view-tabs {
@@ -54,10 +88,73 @@
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 }
 
-/* Weekly Schedule & Attendance Grid inspired by Images 2 & 3 */
+/* Streamlined Detail Panel */
+.emp-detail-panel {
+  gap: 14px;
+}
+
+.emp-summary-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+  padding: 11px 14px;
+  background: #f8fafc;
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.emp-summary-meta div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.emp-summary-meta small {
+  color: var(--mut);
+  font-size: 11.5px;
+}
+
+.emp-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.emp-record-chip {
+  background: #f1f5f9;
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  color: var(--tx);
+}
+
+.compact-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.compact-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 11px;
+  background: #f8fafc;
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  font-size: 12.5px;
+}
+
+/* Weekly Schedule Grid */
 .schedule-grid-table th,
 .schedule-grid-table td {
-  vertical-align: top;
+  vertical-align: middle;
   padding: 10px 10px;
 }
 
@@ -78,19 +175,12 @@
   font-weight: 500;
 }
 
-.shift-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  min-width: 125px;
-}
-
 .shift-pill {
-  padding: 6px 8px;
+  padding: 6px 9px;
   border-radius: 6px;
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 600;
-  line-height: 1.25;
+  line-height: 1.3;
   border-left: 3px solid transparent;
 }
 

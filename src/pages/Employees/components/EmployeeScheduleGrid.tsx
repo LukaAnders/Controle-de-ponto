@@ -2,7 +2,7 @@ import { TODAY } from "../../../data/mockData";
 import { Employee } from "../../../types";
 
 const weekDays = [
-  { day: "Seg", date: "26 Out (Hoje)" },
+  { day: "Seg", date: "26 Out" },
   { day: "Ter", date: "27 Out" },
   { day: "Qua", date: "28 Out" },
   { day: "Qui", date: "29 Out" },
@@ -29,25 +29,10 @@ export default function EmployeeScheduleGrid({
 
   return (
     <div className="card scroll">
-      <div className="section-header" style={{ marginBottom: 4 }}>
-        <div>
-          <h2>Escalas e Regime Semanal ({list.length} colaboradores)</h2>
-          <p className="sub" style={{ margin: 0 }}>
-            Visualização de turnos planejados, dias de home office autorizado e
-            restrições remotas.
-          </p>
-        </div>
-        <div className="row">
-          <span className="badge ok">Turno Presencial</span>
-          <span className="badge info">Home Office Autorizado</span>
-          <span className="badge warn">Permissão Remota Pendente/Vencida</span>
-        </div>
-      </div>
-
       <table className="schedule-grid-table">
         <thead>
           <tr>
-            <th style={{ minWidth: 210 }}>Colaborador · Carga Semanal</th>
+            <th style={{ minWidth: 200 }}>Colaborador</th>
             {weekDays.map((w) => (
               <th key={w.day}>
                 <div className="day-col-header">
@@ -61,7 +46,8 @@ export default function EmployeeScheduleGrid({
         <tbody>
           {list.map((e, idx) => {
             const isRemoteValid = e.remote.allowed && e.remote.until >= TODAY;
-            const times = e.schedule.split(" ")[0] + " - " + e.schedule.split(" ")[2];
+            const times =
+              e.schedule.split(" ")[0] + " - " + e.schedule.split(" ")[2];
 
             return (
               <tr
@@ -80,7 +66,7 @@ export default function EmployeeScheduleGrid({
                     <div>
                       <strong>{e.name}</strong>
                       <div className="cell-sub">
-                        {e.role} · 40h sem.
+                        {e.dept} · {e.mode}
                       </div>
                     </div>
                   </div>
@@ -90,11 +76,9 @@ export default function EmployeeScheduleGrid({
                   if (!e.active) {
                     return (
                       <td key={w.day}>
-                        <div className="shift-stack">
-                          <div className="shift-pill inativo">
-                            Cadastro Inativo
-                            <small>Sem escala ativa</small>
-                          </div>
+                        <div className="shift-pill inativo">
+                          Inativo
+                          <small>Sem turno</small>
                         </div>
                       </td>
                     );
@@ -112,17 +96,15 @@ export default function EmployeeScheduleGrid({
 
                   const modeLabel = isRemoteDay
                     ? isRemoteValid
-                      ? "Home Office (Autorizado)"
-                      : "Remoto s/ permissão ativa"
-                    : "Turno Presencial";
+                      ? "Home Office"
+                      : "Sem permissão"
+                    : "Presencial";
 
                   return (
                     <td key={w.day}>
-                      <div className="shift-stack">
-                        <div className={`shift-pill ${pillClass}`}>
-                          {times || "08:00 - 17:00"} (8h)
-                          <small>{modeLabel}</small>
-                        </div>
+                      <div className={`shift-pill ${pillClass}`}>
+                        {times || "08:00 - 17:00"}
+                        <small>{modeLabel}</small>
                       </div>
                     </td>
                   );
@@ -135,4 +117,3 @@ export default function EmployeeScheduleGrid({
     </div>
   );
 }
-

@@ -26,75 +26,76 @@ export default function EmployeeFilters({
   role,
   onClear,
 }: EmployeeFiltersProps) {
+  const hasFilters = Boolean(q || d || m || s);
+
   return (
-    <div className="card filter-bar">
-      <label className="filter-item grow">
-        <span>Pesquisar colaborador</span>
+    <div className="emp-toolbar">
+      <div
+        className="emp-mode-tabs"
+        role="tablist"
+        aria-label="Filtrar por modalidade de trabalho"
+      >
+        {[
+          { val: "", label: "Todos" },
+          { val: "Presencial", label: "Presencial" },
+          { val: "Híbrido", label: "Híbrido" },
+          { val: "Remoto", label: "Remoto" },
+        ].map((tab) => (
+          <button
+            key={tab.val}
+            type="button"
+            role="tab"
+            aria-selected={m === tab.val}
+            className={`emp-tab-btn ${m === tab.val ? "active" : ""}`}
+            onClick={() => setM(tab.val)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="emp-inline-filters">
         <input
+          className="emp-search-input"
           aria-label="Pesquisar por nome, matrícula ou cargo"
-          placeholder="Nome, matrícula (ex.: 1001) ou cargo..."
+          placeholder="Buscar nome, matrícula ou cargo..."
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
-      </label>
 
-      <label className="filter-item">
-        <span>Setor</span>
-        <select
-          aria-label="Setor"
-          value={d}
-          disabled={role === "gestor"}
-          onChange={(e) => setD(e.target.value)}
-        >
-          <option value="">Todos os setores</option>
-          {depts.map((x) => (
-            <option key={x} value={x}>
-              {x}
-            </option>
-          ))}
-        </select>
-      </label>
+        {role === "rh" && (
+          <select
+            className="emp-select"
+            aria-label="Filtrar por setor"
+            value={d}
+            onChange={(e) => setD(e.target.value)}
+          >
+            <option value="">Todos os setores</option>
+            {depts.map((x) => (
+              <option key={x} value={x}>
+                {x}
+              </option>
+            ))}
+          </select>
+        )}
 
-      <label className="filter-item">
-        <span>Modalidade de trabalho</span>
         <select
-          aria-label="Modalidade"
-          value={m}
-          onChange={(e) => setM(e.target.value)}
-        >
-          <option value="">Todas as modalidades</option>
-          {["Presencial", "Híbrido", "Remoto"].map((x) => (
-            <option key={x} value={x}>
-              {x}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label className="filter-item">
-        <span>Situação cadastral</span>
-        <select
-          aria-label="Situação"
+          className="emp-select"
+          aria-label="Filtrar por situação cadastral"
           value={s}
           onChange={(e) => setS(e.target.value)}
         >
-          <option value="">Todas as situações</option>
-          <option value="a">Ativo</option>
-          <option value="i">Inativo</option>
+          <option value="">Situação: Todos</option>
+          <option value="a">Apenas Ativos</option>
+          <option value="i">Apenas Inativos</option>
         </select>
-      </label>
 
-      {(q || d || s || m) && (
-        <button
-          type="button"
-          className="btn"
-          style={{ alignSelf: "flex-end" }}
-          onClick={onClear}
-        >
-          Limpar filtros
-        </button>
-      )}
+        {hasFilters && (
+          <button type="button" className="btn" onClick={onClear}>
+            Limpar
+          </button>
+        )}
+      </div>
     </div>
   );
 }
-

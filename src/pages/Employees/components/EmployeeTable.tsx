@@ -7,7 +7,6 @@ interface EmployeeTableProps {
   role: Role;
   onSelectDetail: (id: string) => void;
   onEdit: (e: Employee) => void;
-  onToggleActive: (e: Employee) => void;
 }
 
 export default function EmployeeTable({
@@ -16,7 +15,6 @@ export default function EmployeeTable({
   role,
   onSelectDetail,
   onEdit,
-  onToggleActive,
 }: EmployeeTableProps) {
   const getInitials = (name: string) =>
     name
@@ -27,88 +25,78 @@ export default function EmployeeTable({
 
   const renderRemoteBadge = (e: Employee) => {
     if (!e.remote.allowed) {
-      return <span className="badge">Sem permissão</span>;
+      return <span className="badge">Home office: Sem permissão</span>;
     }
     if (e.remote.until < TODAY) {
       return (
         <span className="badge bad">
-          Vencida ({formatDateBR(e.remote.until)})
+          Home office vencido ({formatDateBR(e.remote.until)})
         </span>
       );
     }
     return (
       <span className="badge ok">
-        Autorizado até {formatDateBR(e.remote.until)}
+        Home office até {formatDateBR(e.remote.until)}
       </span>
     );
   };
 
   return (
     <div className="card scroll">
-      <div className="section-header" style={{ marginBottom: 4 }}>
-        <h2>Quadro de colaboradores ({list.length})</h2>
-        <small className="sub" style={{ margin: 0 }}>
-          Clique em “Detalhes” para inspecionar histórico de ponto, ocorrências
-          e permissões.
-        </small>
-      </div>
       <table>
         <thead>
           <tr>
-            <th>Funcionário</th>
-            <th>Matrícula</th>
-            <th>Setor</th>
-            <th>Cargo</th>
-            <th>Modalidade</th>
-            <th>Ponto em Home Office</th>
+            <th>Colaborador</th>
+            <th>Cargo e Setor</th>
+            <th>Regime e Permissão Remota</th>
             <th>Situação</th>
             <th style={{ textAlign: "right" }}>Ações</th>
           </tr>
         </thead>
         <tbody>
-          {list.map((e, idx) => (
-            <tr
-              key={e.id}
-              className={detailId === e.id ? "selected-row" : ""}
-            >
-              <td>
-                <div className="emp-cell">
-                  <div className={`emp-avatar alt-${idx % 4}`}>
-                    {getInitials(e.name)}
+          {list.map((e, idx) => {
+            const isSelected = detailId === e.id;
+            return (
+              <tr
+                key={e.id}
+                className={isSelected ? "selected-row" : ""}
+                style={{ cursor: "pointer" }}
+                onClick={() => onSelectDetail(isSelected ? "" : e.id)}
+              >
+                <td>
+                  <div className="emp-cell">
+                    <div className={`emp-avatar alt-${idx % 4}`}>
+                      {getInitials(e.name)}
+                    </div>
+                    <div>
+                      <strong>{e.name}</strong>
+                      <div className="cell-sub">
+                        Mat. {e.reg} · {e.schedule.split(" (")[0]}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <strong>{e.name}</strong>
-                    <div className="cell-sub">{e.schedule}</div>
+                </td>
+                <td>
+                  <strong>{e.role}</strong>
+                  <div className="cell-sub">{e.dept}</div>
+                </td>
+                <td>
+                  <div className="row" style={{ gap: 6 }}>
+                    <span className="badge info">{e.mode}</span>
+                    {renderRemoteBadge(e)}
                   </div>
-                </div>
-              </td>
-              <td>
-                <code>{e.reg}</code>
-              </td>
-              <td>{e.dept}</td>
-              <td>{e.role}</td>
-              <td>
-                <span className="badge info">{e.mode}</span>
-              </td>
-              <td>{renderRemoteBadge(e)}</td>
-              <td>
-                <span className={"badge " + (e.active ? "ok" : "bad")}>
-                  {e.active ? "Ativo" : "Inativo"}
-                </span>
-              </td>
-              <td style={{ textAlign: "right" }}>
-                <div className="row" style={{ justifyContent: "flex-end" }}>
-                  <button
-                    type="button"
-                    className="btn"
-                    onClick={() =>
-                      onSelectDetail(detailId === e.id ? "" : e.id)
-                    }
-                  >
-                    {detailId === e.id ? "Fechar" : "Detalhes"}
-                  </button>
-                  {role === "rh" && (
-                    <>
+                </td>
+                <td>
+                  <span className={"badge " + (e.active ? "ok" : "bad")}>
+                    {e.active ? "Ativo" : "Inativo"}
+                  </span>
+                </td>
+                <td
+                  style={{ textAlign: "right" }}
+                  onClick={(ev) => ev.stopPropagation()}
+                >
+                  <div className="row" style={{ justifyContent: "flex-end" }}>
+                    {role === "rh" && (
                       <button
                         type="button"
                         className="btn"
@@ -116,24 +104,23 @@ export default function EmployeeTable({
                       >
                         Editar
                       </button>
-                      <button
-                        type="button"
-                        className="btn"
-                        onClick={() => onToggleActive(e)}
-                      >
-                        {e.active ? "Desativar" : "Ativar"}
-                      </button>
-                    </>
-                  )}
-                </div>
-              </td>
-            </tr>
-          ))}
+                    )}
+                    <button
+                      type="button"
+                      className={`btn ${isSelected ? "primary-outline" : ""}`}
+                      onClick={() => onSelectDetail(isSelected ? "" : e.id)}
+                    >
+                      {isSelected ? "Fechar" : "Ver ficha"}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
           {!list.length && (
             <tr>
-              <td colSpan={8} className="empty-cell">
-                Nenhum funcionário encontrado com os critérios atuais. Ajuste a
-                busca ou limpe os filtros.
+              <td colSpan={5} className="empty-cell">
+                Nenhum funcionário encontrado com os critérios atuais.
               </td>
             </tr>
           )}
