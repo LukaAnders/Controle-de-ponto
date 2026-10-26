@@ -15,51 +15,53 @@ export default function KpiCards({
     <section aria-label="Indicadores principais da jornada" className="grid3">
       <div className="card kpi-card">
         <div className="kpi-top">
-          <span className="kpi-label">Presentes hoje</span>
-          <span className="badge ok">Operação normal</span>
+          <div className="kpi-icon-badge blue" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+          </div>
+          <span className="badge ok">Hoje</span>
         </div>
-        <div className="kpi-value-row">
-          <strong className="big">{presentCount}</strong>
-          <span className="kpi-unit">de {activeCount} funcionários</span>
-        </div>
-        <small className="kpi-foot">
-          Contabiliza colaboradores ativos com entrada registrada na data (
-          {Math.round((presentCount / activeCount) * 100)}% do quadro)
-        </small>
+        <span className="kpi-label">Presentes hoje</span>
+        <strong className="big blue-num">{presentCount}</strong>
+        <span className="kpi-foot">de {activeCount} funcionários ativos</span>
       </div>
 
       <div className="card kpi-card">
         <div className="kpi-top">
-          <span className="kpi-label">Em jornada</span>
+          <div className="kpi-icon-badge amber" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="9" />
+              <polyline points="12 7 12 12 15 15" />
+            </svg>
+          </div>
           <span className="badge info">Turno ativo</span>
         </div>
-        <div className="kpi-value-row">
-          <strong className="big">{inShiftCount}</strong>
-          <span className="kpi-unit">jornadas</span>
-        </div>
-        <small className="kpi-foot">
-          Jornadas atualmente em andamento (6 em intervalo intrajornada no
-          momento)
-        </small>
+        <span className="kpi-label">Em jornada</span>
+        <strong className="big">{inShiftCount}</strong>
+        <span className="kpi-foot">Registros em andamento</span>
       </div>
 
       <div className="card kpi-card warn">
         <div className="kpi-top">
-          <span className="kpi-label">Exigem atenção</span>
-          <span className="badge warn">
+          <div className="kpi-icon-badge red" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+          </div>
+          <span className="badge bad">
             {openOccsCount > 0 ? "Requer ação" : "Em dia"}
           </span>
         </div>
-        <div className="kpi-value-row">
-          <strong className="big">{openOccsCount}</strong>
-          <span className="kpi-unit">ocorrências</span>
-        </div>
-        <small className="kpi-foot">
-          Soma de registros incompletos, justificativas e permissões remotas
-          aguardando análise
-        </small>
+        <span className="kpi-label">Exigem atenção</span>
+        <strong className="big red-num">{openOccsCount}</strong>
+        <span className="kpi-foot">Ocorrências abertas</span>
       </div>
     </section>
   );
 }
-

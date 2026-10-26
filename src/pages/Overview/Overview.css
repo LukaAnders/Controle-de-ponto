@@ -1,5 +1,115 @@
+/* Top Sub-bar inspired by Jibble Day/Week/Month + Filters */
+.overview-subbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: var(--surface);
+  border: 1px solid var(--bd);
+  border-radius: 12px;
+  padding: 10px 20px;
+}
+
+.period-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.period-tab {
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--mut);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.period-tab:hover {
+  color: var(--tx);
+}
+
+.period-tab.active {
+  color: var(--blue);
+  border-bottom-color: var(--blue);
+}
+
+.subbar-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.subbar-select {
+  padding: 6px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 6px;
+  background: #f8fafc;
+}
+
+/* Widescreen 1920x1080 2-Column Cockpit Grid */
+.overview-cockpit-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+@media (min-width: 1200px) {
+  .overview-cockpit-grid {
+    grid-template-columns: minmax(0, 1fr) 360px;
+  }
+}
+
+@media (min-width: 1600px) {
+  .overview-cockpit-grid {
+    grid-template-columns: minmax(0, 1fr) 400px;
+  }
+}
+
+.overview-main-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* KPI Strip matching Image 4 */
 .kpi-card {
   gap: 8px;
+  padding: 20px 22px;
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-icon-badge {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 2px;
+}
+
+.kpi-icon-badge.blue {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.kpi-icon-badge.amber {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.kpi-icon-badge.red {
+  background: #fee2e2;
+  color: #dc2626;
 }
 
 .kpi-top {
@@ -9,53 +119,125 @@
 }
 
 .kpi-label {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--mut);
 }
 
-.kpi-value-row {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-
 .big {
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 700;
   letter-spacing: -0.03em;
   color: var(--tx);
-  line-height: 1.1;
+  line-height: 1.05;
 }
 
-.kpi-unit {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--mut);
+.big.blue-num {
+  color: #2563eb;
+}
+
+.big.red-num {
+  color: #dc2626;
 }
 
 .kpi-foot {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--mut);
 }
 
+/* Prioridades do RH List matching Image 4 */
+.priority-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.priority-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 4px;
+  border-bottom: 1px solid var(--bd);
+}
+
+.priority-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 4px;
+}
+
+.priority-item:first-child {
+  padding-top: 6px;
+}
+
+.priority-item-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.priority-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.priority-icon-box.red {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.priority-icon-box.amber {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.priority-icon-box.blue {
+  background: #dbeAFE;
+  color: #2563eb;
+}
+
+.priority-item-text strong {
+  display: block;
+  font-size: 15px;
+  color: var(--tx);
+  margin-bottom: 2px;
+}
+
+.priority-item-text span {
+  font-size: 13px;
+  color: var(--mut);
+}
+
+.priority-item-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Origem das marcações de hoje matching Image 4 */
 .modality-bars {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+  margin-top: 4px;
 }
 
 .modality-bar-item {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 7px;
 }
 
 .modality-bar-header {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  font-size: 13.5px;
+  font-size: 14px;
 }
 
 .modality-bar-desc {
@@ -64,20 +246,162 @@
 }
 
 .modality-pct {
-  color: var(--navy);
+  color: var(--tx);
   font-size: 14px;
+  font-weight: 700;
 }
 
 .bar-track {
   background: #e2e8f0;
-  height: 8px;
+  height: 9px;
   border-radius: 99px;
   overflow: hidden;
 }
 
 .bar-fill {
   height: 100%;
-  background: var(--blue);
   border-radius: 99px;
 }
 
+.bar-fill.mod-0 {
+  background: #2563eb;
+}
+
+.bar-fill.mod-1 {
+  background: #0d9488;
+}
+
+.bar-fill.mod-2 {
+  background: #6366f1;
+}
+
+/* Right-hand Who's In/Out Live Panel inspired by Image 1 */
+.live-team-panel {
+  position: sticky;
+  top: 88px;
+  gap: 14px;
+}
+
+.live-team-header {
+  text-align: center;
+  padding-bottom: 4px;
+}
+
+.live-team-header h2 {
+  font-size: 16px;
+}
+
+.live-team-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-bottom: 1px solid var(--bd);
+  text-align: center;
+}
+
+.live-tab {
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 8px 4px 10px;
+  cursor: pointer;
+  font: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.live-tab strong {
+  font-size: 18px;
+  color: var(--mut);
+}
+
+.live-tab span {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--mut);
+}
+
+.live-tab.active {
+  border-bottom-color: var(--blue);
+}
+
+.live-tab.active strong,
+.live-tab.active span {
+  color: var(--blue);
+}
+
+.live-search {
+  width: 100%;
+  font-size: 13px;
+  background: #f8fafc;
+}
+
+.live-member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 460px;
+  overflow-y: auto;
+}
+
+.live-member-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 8px;
+  border-bottom: 1px solid #f1f5f9;
+  border-radius: 8px;
+  cursor: pointer;
+  background: transparent;
+  border-left: 0;
+  border-right: 0;
+  border-top: 0;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+}
+
+.live-member-item:hover {
+  background: #f8fafc;
+}
+
+.status-dot {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+}
+
+.status-dot.in {
+  background: #16a34a;
+}
+
+.status-dot.break {
+  background: #f59e0b;
+}
+
+.status-dot.out {
+  background: #94a3b8;
+}
+
+.live-member-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.live-member-info strong {
+  font-size: 13.5px;
+  color: var(--tx);
+}
+
+.live-member-info small {
+  font-size: 11.5px;
+  color: var(--mut);
+}

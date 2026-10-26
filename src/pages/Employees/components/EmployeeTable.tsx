@@ -18,6 +18,13 @@ export default function EmployeeTable({
   onEdit,
   onToggleActive,
 }: EmployeeTableProps) {
+  const getInitials = (name: string) =>
+    name
+      .split(" ")
+      .slice(0, 2)
+      .map((p) => p[0])
+      .join("");
+
   const renderRemoteBadge = (e: Employee) => {
     if (!e.remote.allowed) {
       return <span className="badge">Sem permissão</span>;
@@ -59,13 +66,21 @@ export default function EmployeeTable({
           </tr>
         </thead>
         <tbody>
-          {list.map((e) => (
+          {list.map((e, idx) => (
             <tr
               key={e.id}
               className={detailId === e.id ? "selected-row" : ""}
             >
               <td>
-                <strong>{e.name}</strong>
+                <div className="emp-cell">
+                  <div className={`emp-avatar alt-${idx % 4}`}>
+                    {getInitials(e.name)}
+                  </div>
+                  <div>
+                    <strong>{e.name}</strong>
+                    <div className="cell-sub">{e.schedule}</div>
+                  </div>
+                </div>
               </td>
               <td>
                 <code>{e.reg}</code>
@@ -127,4 +142,3 @@ export default function EmployeeTable({
     </div>
   );
 }
-

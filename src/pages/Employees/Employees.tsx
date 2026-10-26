@@ -4,6 +4,7 @@ import { depts } from "../../data/mockData";
 import { Employee } from "../../types";
 import EmployeeFilters from "./components/EmployeeFilters";
 import EmployeeTable from "./components/EmployeeTable";
+import EmployeeScheduleGrid from "./components/EmployeeScheduleGrid";
 import EmployeeDetailPanel from "./components/EmployeeDetailPanel";
 import EmployeeFormModal from "./components/EmployeeFormModal";
 import "./Employees.css";
@@ -26,12 +27,13 @@ const blank = (): Employee => ({
 
 export default function Employees() {
   const { employees, recs, occs, saveEmployee, go, role } = useApp();
+  const [viewMode, setViewMode] = useState<"table" | "schedule">("table");
   const [q, setQ] = useState("");
   const [d, setD] = useState("");
   const [s, setS] = useState("");
   const [m, setM] = useState("");
   const [ed, setEd] = useState<Employee | null>(null);
-  const [detailId, setDetailId] = useState<string>("");
+  const [detailId, setDetailId] = useState<string>("e1");
   const [err, setErr] = useState("");
 
   const list = employees.filter(
@@ -95,25 +97,49 @@ export default function Employees() {
     <div className="page-stack">
       <div className="page-header">
         <div>
-          <h1>Funcionários</h1>
+          <h1>Funcionários e Escalas</h1>
           <p className="sub">
             {role === "gestor"
-              ? "Consulta de colaboradores alocados no setor de Tecnologia."
-              : "Gerencie o quadro de funcionários fictícios, modalidades de trabalho e autorizações de home office."}
+              ? "Consulta de colaboradores e escalas alocados no setor de Tecnologia."
+              : "Gerencie o quadro de funcionários fictícios, escalas semanais e autorizações de home office."}
           </p>
         </div>
-        {role === "rh" && (
-          <button
-            type="button"
-            className="btn primary"
-            onClick={() => {
-              setErr("");
-              setEd(blank());
-            }}
-          >
-            + Novo funcionário
-          </button>
-        )}
+
+        <div className="page-header-actions">
+          <div className="view-tabs" role="tablist" aria-label="Modo de visualização">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={viewMode === "table"}
+              className={`view-tab-btn ${viewMode === "table" ? "active" : ""}`}
+              onClick={() => setViewMode("table")}
+            >
+              Lista Cadastral
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={viewMode === "schedule"}
+              className={`view-tab-btn ${viewMode === "schedule" ? "active" : ""}`}
+              onClick={() => setViewMode("schedule")}
+            >
+              Grade de Escalas (Semana)
+            </button>
+          </div>
+
+          {role === "rh" && (
+            <button
+              type="button"
+              className="btn primary"
+              onClick={() => {
+                setErr("");
+                setEd(blank());
+              }}
+            >
+              + Novo funcionário
+            </button>
+          )}
+        </div>
       </div>
 
       <EmployeeFilters
@@ -135,14 +161,22 @@ export default function Employees() {
       />
 
       <div className="split">
-        <EmployeeTable
-          list={list}
-          detailId={detailId}
-          role={role}
-          onSelectDetail={setDetailId}
-          onEdit={handleOpenEdit}
-          onToggleActive={(e) => saveEmployee({ ...e, active: !e.active })}
-        />
+        {viewMode === "table" ? (
+          <EmployeeTable
+            list={list}
+            detailId={detailId}
+            role={role}
+            onSelectDetail={setDetailId}
+            onEdit={handleOpenEdit}
+            onToggleActive={(e) => saveEmployee({ ...e, active: !e.active })}
+          />
+        ) : (
+          <EmployeeScheduleGrid
+            list={list}
+            detailId={detailId}
+            onSelectDetail={setDetailId}
+          />
+        )}
 
         {selectedEmp && (
           <EmployeeDetailPanel
@@ -173,4 +207,3 @@ export default function Employees() {
     </div>
   );
 }
-

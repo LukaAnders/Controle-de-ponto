@@ -5,7 +5,16 @@ import { Role } from "../../types";
 import "./Header.css";
 
 export default function Header() {
-  const { role, setRole, page, go, occs, employees } = useApp();
+  const {
+    role,
+    setRole,
+    page,
+    go,
+    occs,
+    employees,
+    sidebarCollapsed,
+    toggleSidebar,
+  } = useApp();
   const [showNotif, setShowNotif] = useState(false);
 
   const openOccs = occs.filter(
@@ -19,16 +28,98 @@ export default function Header() {
   return (
     <header className="top-header">
       <div className="header-left">
-        <span className="header-section-title">{pageNames[page]}</span>
-        <span
-          className="demo-pill"
-          title="Todos os dados e equipamentos são simulados localmente"
+        <button
+          type="button"
+          className="sidebar-toggle-btn"
+          onClick={toggleSidebar}
+          aria-label={
+            sidebarCollapsed ? "Mostrar barra lateral" : "Ocultar barra lateral"
+          }
+          title={
+            sidebarCollapsed
+              ? "Expandir barra lateral"
+              : "Recolher barra lateral"
+          }
         >
-          Ambiente Demonstrativo
-        </span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <line x1="9" y1="3" x2="9" y2="21" />
+          </svg>
+        </button>
+
+        <div className="header-title-block">
+          <span className="header-section-title">{pageNames[page]}</span>
+          <span
+            className="demo-pill"
+            title="Todos os dados e equipamentos são simulados localmente"
+          >
+            Segunda-feira, 26 Out · Demonstrativo
+          </span>
+        </div>
       </div>
 
       <div className="header-right">
+        <div
+          className="header-quick-cluster"
+          aria-label="Atalhos rápidos de operação"
+        >
+          <span className="header-live-timer" title="Turno corporativo ativo">
+            08:44:36
+          </span>
+          <button
+            type="button"
+            className="quick-circle-btn green"
+            title="Simular registro de entrada (Central de Ponto)"
+            onClick={() => go("punch")}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className="quick-circle-btn amber"
+            title="Revisar ocorrências e intervalos pendentes"
+            onClick={() => go("occurrences", { open: "1" })}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8h1a4 4 0 0 1 0 8h-1" />
+              <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className="quick-circle-btn crimson"
+            title="Abrir Assistente Operacional de IA"
+            onClick={() => go("assistant")}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+          </button>
+        </div>
+
+        <div
+          className="role-segmented-control"
+          role="group"
+          aria-label="Alternar perfil demonstrativo"
+        >
+          {(Object.keys(roles) as Role[]).map((r) => (
+            <button
+              key={r}
+              type="button"
+              className={`segment-btn ${role === r ? "active" : ""}`}
+              onClick={() => {
+                setShowNotif(false);
+                setRole(r);
+              }}
+              title={`Simular visão: ${roles[r].label}`}
+            >
+              {roles[r].segmentLabel}
+            </button>
+          ))}
+        </div>
+
         <div className="notif-wrapper">
           <button
             type="button"
@@ -36,7 +127,7 @@ export default function Header() {
             aria-label={`Notificações demonstrativas (${openOccs.length} pendentes)`}
             onClick={() => setShowNotif((v) => !v)}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
@@ -46,7 +137,11 @@ export default function Header() {
           </button>
 
           {showNotif && (
-            <div className="notif-popover" role="region" aria-label="Notificações">
+            <div
+              className="notif-popover"
+              role="region"
+              aria-label="Notificações"
+            >
               <div className="notif-header">
                 <strong>Pendências de Jornada ({openOccs.length})</strong>
                 <button
@@ -91,28 +186,7 @@ export default function Header() {
             </div>
           )}
         </div>
-
-        <div className="profile-switcher">
-          <label htmlFor="role-select" className="profile-label">
-            <span>Perfil de acesso (simulado):</span>
-            <select
-              id="role-select"
-              value={role}
-              onChange={(e) => {
-                setShowNotif(false);
-                setRole(e.target.value as Role);
-              }}
-            >
-              {(Object.keys(roles) as Role[]).map((r) => (
-                <option key={r} value={r}>
-                  {roles[r].label}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
       </div>
     </header>
   );
 }
-

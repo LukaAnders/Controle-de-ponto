@@ -15,6 +15,7 @@ export const roles: Record<
   {
     label: string;
     shortLabel: string;
+    segmentLabel: string;
     user: string;
     userRole: string;
     avatar: string;
@@ -25,6 +26,7 @@ export const roles: Record<
   rh: {
     label: "RH / Administrador",
     shortLabel: "Administração RH",
+    segmentLabel: "Organização (RH)",
     user: "Marina Costa",
     userRole: "Coordenação de RH e Operações de Pessoas",
     avatar: "MC",
@@ -34,6 +36,7 @@ export const roles: Record<
   gestor: {
     label: "Gestor (Setor Tecnologia)",
     shortLabel: "Gestor · Tecnologia",
+    segmentLabel: "Meu Setor (Gestor)",
     user: "Paulo Ramos",
     userRole: "Gerente de Engenharia e QA",
     avatar: "PR",
@@ -43,6 +46,7 @@ export const roles: Record<
   funcionario: {
     label: "Funcionário (Ana Souza)",
     shortLabel: "Colaboradora",
+    segmentLabel: "Pessoal (Funcionário)",
     user: "Ana Souza",
     userRole: "Desenvolvedora Pleno · Matrícula 1001",
     avatar: "AS",
@@ -60,6 +64,8 @@ export interface AppContextValue {
   page: Page;
   query: Record<string, string>;
   go: (p: Page, q?: Record<string, string>) => void;
+  sidebarCollapsed: boolean;
+  toggleSidebar: () => void;
   employees: Employee[];
   allEmployeesCount: number;
   occs: Occ[];
@@ -79,6 +85,7 @@ export function Provider({ children }: { children: ReactNode }) {
   const [role, setRoleS] = useState<Role>("rh");
   const [page, setPage] = useState<Page>("overview");
   const [query, setQuery] = useState<Record<string, string>>({});
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [employees, setEmp] = useState<Employee[]>(employees0);
   const [allOccs, setOccs] = useState<Occ[]>(occurrences0);
   const [allRecs, setRecs] = useState<Rec[]>(records0);
@@ -88,6 +95,8 @@ export function Provider({ children }: { children: ReactNode }) {
     setToast(m);
     setTimeout(() => setToast(""), 4200);
   };
+
+  const toggleSidebar = () => setSidebarCollapsed((prev) => !prev);
 
   const go = (p: Page, q: Record<string, string> = {}) => {
     const allowedPages = roles[role].pages;
@@ -118,6 +127,8 @@ export function Provider({ children }: { children: ReactNode }) {
     page,
     query,
     go,
+    sidebarCollapsed,
+    toggleSidebar,
     toast,
     notify,
     employees: employees.filter((e) => visE(e.id)),
@@ -203,4 +214,3 @@ export function Provider({ children }: { children: ReactNode }) {
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
-

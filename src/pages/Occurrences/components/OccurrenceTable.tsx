@@ -41,6 +41,13 @@ export default function OccurrenceTable({
 }: OccurrenceTableProps) {
   const getEmp = (id: string) => employees.find((e) => e.id === id);
 
+  const getInitials = (name: string) =>
+    name
+      .split(" ")
+      .slice(0, 2)
+      .map((p) => p[0])
+      .join("");
+
   return (
     <div className="card scroll">
       <div className="section-header" style={{ marginBottom: 4 }}>
@@ -64,20 +71,29 @@ export default function OccurrenceTable({
           </tr>
         </thead>
         <tbody>
-          {list.map((x) => {
+          {list.map((x, idx) => {
             const emp = getEmp(x.empId);
             const isSelected = selectedId === x.id;
             return (
               <tr key={x.id} className={isSelected ? "selected-row" : ""}>
                 <td>
-                  <strong>{emp?.name ?? "—"}</strong>
-                  {emp && (
-                    <div className="cell-sub">
-                      {emp.dept} · Mat. {emp.reg}
+                  <div className="emp-cell">
+                    <div className={`emp-avatar alt-${idx % 4}`}>
+                      {getInitials(emp?.name ?? "CO")}
                     </div>
-                  )}
+                    <div>
+                      <strong>{emp?.name ?? "—"}</strong>
+                      {emp && (
+                        <div className="cell-sub">
+                          {emp.dept} · Mat. {emp.reg}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </td>
-                <td>{typeLabel[x.type]}</td>
+                <td>
+                  <strong>{typeLabel[x.type]}</strong>
+                </td>
                 <td>
                   <strong>{formatDateBR(x.date)}</strong>
                   <div className="cell-sub">{x.relatedTime}</div>
@@ -86,7 +102,7 @@ export default function OccurrenceTable({
                 <td className="muted-cell">{x.requestedAt}</td>
                 <td>
                   <span className={`badge ${statusBadgeClass(x.status)}`}>
-                    Status: {x.status}
+                    {x.status}
                   </span>
                 </td>
                 <td>
@@ -118,4 +134,3 @@ export default function OccurrenceTable({
     </div>
   );
 }
-
