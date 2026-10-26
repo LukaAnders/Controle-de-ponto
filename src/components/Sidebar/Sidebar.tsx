@@ -70,7 +70,7 @@ export default function Sidebar({ onOpenPrivacy }: SidebarProps) {
         {sidebarCollapsed ? (
           <div className="brand-Collapsed-box">
             <img
-              src="/logo-icon.png"
+              src={`${import.meta.env.BASE_URL}logo-icon.png`}
               alt="PontoNexo"
               className="brand-icon-img"
             />
@@ -78,7 +78,7 @@ export default function Sidebar({ onOpenPrivacy }: SidebarProps) {
         ) : (
           <div className="brand-full-box">
             <img
-              src="/logo-pontonexo.png"
+              src={`${import.meta.env.BASE_URL}logo-pontonexo.png`}
               alt="PontoNexo — Gestão de Jornada - SaaS"
               className="brand-full-img"
             />
