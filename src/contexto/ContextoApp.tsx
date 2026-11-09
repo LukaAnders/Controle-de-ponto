@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { Employee, Occ, OccStatus, Page, Rec, Role } from "../tipos";
 import { employees0, occurrences0, records0, now } from "../dados/dadosSimulados";
 import {
+  initialResponsibility,
   isTerminalStatus,
   OccurrenceAction,
   roleHasPermission,
@@ -289,6 +290,10 @@ export function Provider({ children }: { children: ReactNode }) {
         id: "o" + (allOccs.length + 1 + Math.floor(Math.random() * 90)),
         requestedAt: now(),
         status: "Pendente",
+        responsibility: {
+          current: initialResponsibility(),
+          next: "rh",
+        },
         history: [
           {
             action: "Solicitação cadastrada na plataforma",
