@@ -2,165 +2,100 @@ export const config = { maxDuration: 60 };
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Método não permitido" });
+    return res.status(405).json({ error: "Método não permitido." });
   }
 
-  const apiKey = (
-    process.env.GEMINI_API_KEY ||
-    process.env.VITE_GEMINI_API_KEY ||
-    process.env.GOOGLE_API_KEY ||
-    ""
-  ).trim();
-
+  const apiKey = (process.env.GROQ_API_KEY || "").trim();
   if (!apiKey) {
     return res.status(503).json({
-      error: "Variável GEMINI_API_KEY não encontrada no servidor da Vercel.",
+      error: "Variável GROQ_API_KEY não encontrada na Vercel.",
     });
   }
 
   try {
-    const body =
-      typeof req.body === "string"
-        ? JSON.parse(req.body || "{}")
-        : req.body || {};
+    const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
     const { question, context } = body;
-
-    if (!question || typeof question !== "string") {
+    if (typeof question !== "string" || !question.trim()) {
       return res.status(400).json({ error: "Pergunta inválida." });
     }
 
-    const prompt = `Você é o Assistente Operacional interno do sistema PontoNexo (sistema de controle de ponto e gestão de jornada).
-Sua função é responder dúvidas operacionais de forma clara, objetiva, administrativa e em português (pt-BR).
-Se o usuário fizer qualquer saudação ou pergunta aberta (como "Olá", "Gemini?", "Quem é você?", "Está funcionando?"), responda cordialmente confirmando que você é o Assistente Operacional do PontoNexo (conectado ao Google Gemini) e explique como pode ajudar na rotina de ponto com base nos dados atuais do perfil dele.
+    const systemPrompt = `Você é o Assistente Operacional interno do PontoNexo. Responda em português do Brasil, com clareza e objetividade. Use estas regras do sistema:
+- Ponto Digital, catraca biométrica e relógio convencional são modalidades de registro. Na catraca, “Registrar ponto” gera batida de jornada; “Apenas entrada/saída” registra somente acesso.
+- Registro remoto pelo Ponto Digital exige autorização de Home Office válida cadastrada pelo RH.
+- Ocorrências podem ser incompletas, justificativas ou solicitações de Home Office. O assistente não altera dados, não aprova nem rejeita solicitações; decisões cabem ao RH e gestores.
+- A página de Funcionários é restrita ao RH e Gestor. Respeite as permissões e o contexto recebido.
+Retorne somente um objeto JSON com estas propriedades: "intent" (título curto), "generalGuidance" (orientação), "userContextInfo" (observação baseada no contexto), "links" (array de objetos com "label" e "page"). O campo page deve ser overview, punch, employees ou occurrences.`;
 
-Regras do sistema PontoNexo:
-1. Modalidades de ponto na Central de Ponto (página "punch"):
-   - Modalidade 1 (Ponto Digital): web/app com verificação facial simulada. Para registrar em Home Office, exige autorização remota ativa cadastrada pelo RH com data de validade vigente.
-   - Modalidade 2 (Catraca Biométrica): possui 2 opções distintas: (1) "Registrar ponto (Jornada + Acesso)" e (2) "Apenas entrada/saída (Somente Acesso)", que registra só circulação física sem gerar batida de ponto.
-   - Modalidade 3 (Relógio Convencional - REP): marcação rápida por matrícula.
-2. Ocorrências e Justificativas (página "occurrences"):
-   - Tipos: "incompleto" (Registro de ponto incompleto), "justificativa" (Justificativa de jornada/ausência/atraso), "homeoffice" (Autorização de home office).
-   - Estados: Pendente, Em análise, Encaminhada para revisão, Aprovada, Rejeitada.
-   - O assistente NUNCA aprova nem rejeita justificativas nem altera dados; a deliberação é exclusiva do RH e gestores.
-3. Funcionários e Escalas (página "employees"):
-   - Visível apenas para RH e Gestor (vedado ao perfil Funcionário). Permite ao RH cadastrar funcionários e gerenciar validade da permissão de Home Office.
-4. Visão Operacional (página "overview"):
-   - Painel administrativo com resumo do dia, situação nominal dos funcionários e pendências do RH.
-
-Contexto atual do usuário logado na sessão:
-${JSON.stringify(context || {}, null, 2)}
-
-Pergunta do usuário: "${question}"
-
-Retorne APENAS um objeto JSON válido com exatamente estas propriedades:
-{
-  "intent": "título curto e direto da orientação",
-  "generalGuidance": "explicação clara da resposta no PontoNexo. Se houver passos, enumere como (1) ..., (2) ..., (3) ...",
-  "userContextInfo": "observação personalizada com base no perfil atual do usuário e nos dados do contexto enviado",
-  "links": [
-    { "label": "Abrir Central de Ponto", "page": "punch" }
-  ]
-}
-(Nota: em "links", o campo "page" deve ser apenas um destes: "overview", "punch", "employees" ou "occurrences").`;
-
-    const tryGenerate = async (model, disableThinking) => {
-      const generationConfig = {
-        temperature: 0.2,
-        maxOutputTokens: 512,
-        ...(disableThinking ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
-      };
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 55000);
-      let response;
-      try {
-        response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-          {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig,
-          }),
-            signal: controller.signal,
-          },
-        );
-      } finally {
-        clearTimeout(timeoutId);
-      }
-
-      if (!response.ok) {
-        const errTxt = await response.text();
-        return { ok: false, error: `${model} (${response.status}): ${errTxt.slice(0, 120)}` };
-      }
-
-      const data = await response.json();
-      const parts = data?.candidates?.[0]?.content?.parts || [];
-      const rawText = parts
-        .map((p) => p.text || "")
-        .join("\n")
-        .trim();
-
-      if (!rawText) {
-        return { ok: false, error: `${model}: resposta vazia` };
-      }
-
-      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        try {
-          const parsed = JSON.parse(jsonMatch[0]);
-          if (parsed.intent && parsed.generalGuidance) {
-            return { ok: true, data: parsed };
-          }
-        } catch {
-          // Usa fallback de texto corrido abaixo
-        }
-      }
-
-      return {
-        ok: true,
-        data: {
-          intent: "Orientação do Assistente Operacional",
-          generalGuidance: rawText.replace(/```json|```/g, "").trim(),
-          userContextInfo: `Resposta gerada para o perfil ${context?.resumoPerfil || "atual"}.`,
-          links: [
-            { label: "Abrir Central de Ponto", page: "punch" },
-            { label: "Ver Ocorrências e Justificativas", page: "occurrences" },
-          ],
+    const model = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+    let response;
+    try {
+      response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
         },
-      };
-    };
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            {
+              role: "user",
+              content: `Contexto do perfil: ${JSON.stringify(context || {})}\n\nPergunta: ${question.trim()}`,
+            },
+          ],
+          max_completion_tokens: 512,
+          response_format: { type: "json_object" },
+        }),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
-    // 1. Tenta direto os modelos mais rápidos (sem gastar tempo listando antes)
-    const configuredModel = process.env.GEMINI_MODEL || "gemini-3.8-flash";
-    const fastCandidates = [
-      { model: configuredModel, disableThinking: true },
-      ...(configuredModel === "gemini-flash-latest"
-        ? []
-        : [{ model: "gemini-flash-latest", disableThinking: true }]),
-    ];
+    if (!response.ok) {
+      const details = (await response.text()).slice(0, 500);
+      return res.status(502).json({
+        error: `Groq (${response.status}, modelo ${model}): ${details}`,
+      });
+    }
 
-    const errors = [];
+    const data = await response.json();
+    const rawText = data?.choices?.[0]?.message?.content?.trim();
+    if (!rawText) {
+      return res.status(502).json({ error: `Groq não retornou texto para ${model}.` });
+    }
 
-    for (const item of fastCandidates) {
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
       try {
-        const result = await tryGenerate(item.model, item.disableThinking);
-        if (result.ok) {
-          return res.status(200).json(result.data);
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (parsed.intent && parsed.generalGuidance) {
+          return res.status(200).json({
+            intent: String(parsed.intent),
+            generalGuidance: String(parsed.generalGuidance),
+            userContextInfo: String(parsed.userContextInfo || `Resposta para o perfil ${context?.resumoPerfil || "atual"}.`),
+            links: Array.isArray(parsed.links) ? parsed.links : [],
+          });
         }
-        errors.push(result.error);
-      } catch (e) {
-        errors.push(`${item.model}: ${e instanceof Error ? e.message : "erro"}`);
+      } catch {
+        // Usa a resposta como texto se o modelo não retornar JSON válido.
       }
     }
 
-    return res.status(502).json({
-      error: `Não foi possível gerar resposta (${errors.join(" | ")})`,
+    return res.status(200).json({
+      intent: "Orientação do Assistente Operacional",
+      generalGuidance: rawText.replace(/```json|```/g, "").trim(),
+      userContextInfo: `Resposta para o perfil ${context?.resumoPerfil || "atual"}.`,
+      links: [],
     });
-  } catch (err) {
-    return res.status(500).json({
-      error: err instanceof Error ? err.message : "Erro interno ao consultar IA",
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Erro interno ao consultar Groq.";
+    const isTimeout = error?.name === "AbortError";
+    return res.status(isTimeout ? 504 : 500).json({
+      error: isTimeout ? "A API Groq excedeu o limite de 20 segundos." : message,
     });
   }
 }
