@@ -23,6 +23,31 @@ interface AssistantChatPanelProps {
   go: (p: Page, q?: Record<string, string>) => void;
 }
 
+function renderGuidanceContent(text: string) {
+  if (text.includes("(1)") && text.includes("(2)")) {
+    const [intro, rest] = text.split("(1)");
+    if (rest) {
+      const steps = rest
+        .split(/\(\d+\)/)
+        .map((s) => s.replace(/^[;\s]+|[;.\s]+(\se\s)?$/g, "").trim())
+        .filter(Boolean);
+
+      return (
+        <>
+          {intro && <p className="answer-paragraph">{intro.trim()}</p>}
+          <ol className="answer-steps">
+            {steps.map((step, i) => (
+              <li key={i}>{step}.</li>
+            ))}
+          </ol>
+        </>
+      );
+    }
+  }
+
+  return <p className="answer-paragraph">{text}</p>;
+}
+
 export default function AssistantChatPanel({
   role,
   history,
@@ -40,96 +65,75 @@ export default function AssistantChatPanel({
 
   return (
     <section
-      className="card assistant-main"
-      aria-label="Painel de respostas do assistente"
+      className="assistant-main"
+      aria-label="Central de orientações do assistente"
     >
-      <div className="assistant-welcome">
-        <div className="welcome-badge">ASSISTENTE DEMONSTRATIVO</div>
-        <h2>Olá, {roles[role].user}! Como posso orientar sua rotina hoje?</h2>
-        <p className="sub" style={{ margin: 0 }}>
-          Minhas respostas separam claramente as{" "}
-          <b>Orientações gerais da plataforma</b> das{" "}
-          <b>
-            Informações contextuais permitidas ao seu perfil ({roles[role].label}
-            )
-          </b>
-          .
-        </p>
-      </div>
-
       <div className="assistant-feed">
         {history.length === 0 ? (
           <div className="assistant-empty">
-            <strong>Nenhuma consulta realizada nesta sessão</strong>
+            <h2>Olá! Como podemos ajudar?</h2>
             <p>
-              Clique em uma das perguntas sugeridas ao lado ou digite sua dúvida
-              abaixo (por exemplo:{" "}
-              <i>“Por que meu registro aparece incompleto?”</i> ou{" "}
-              <i>“Como funciona a autorização de home office?”</i>).
+              Selecione uma das perguntas frequentes ao lado para consultar uma
+              orientação sobre o controle de ponto.
             </p>
           </div>
         ) : (
-          history.map((item) => (
-            <div key={item.id} className="qa-card">
-              <div className="qa-question">
-                <span className="qa-user-tag">Sua pergunta:</span>
-                <strong>{item.question}</strong>
-              </div>
-
-              <div className="qa-answer">
-                <div className="qa-intent">
-                  <span>Intenção identificada:</span>{" "}
-                  <b>{item.response.intent}</b>
+          <div className="conversation-list">
+            {history.map((item) => (
+              <article key={item.id} className="conversation-item">
+                <div className="question-row">
+                  <span className="question-label">Dúvida selecionada</span>
+                  <h3 className="question-title">{item.question}</h3>
                 </div>
 
-                <div className="qa-section">
-                  <small>ORIENTAÇÃO GERAL (POLÍTICA OPERACIONAL)</small>
-                  <p>{item.response.generalGuidance}</p>
-                </div>
+                <div className="answer-body">
+                  <h4 className="answer-title">{item.response.intent}</h4>
 
-                <div className="qa-section contextual">
-                  <small>
-                    CONTEXTO DO PERFIL ATUAL (
-                    {roles[role].shortLabel.toUpperCase()})
-                  </small>
-                  <p>{item.response.userContextInfo}</p>
-                </div>
+                  {renderGuidanceContent(item.response.generalGuidance)}
 
-                <div className="qa-actions">
-                  <span>Atalhos recomendados:</span>
-                  <div className="row">
-                    {item.response.links.map((lk, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        className="btn primary-outline"
-                        onClick={() => go(lk.page, lk.query)}
-                      >
-                        {lk.label}
-                      </button>
-                    ))}
+                  <div className="answer-note">
+                    <span className="answer-note-label">
+                      Observação ({roles[role].shortLabel}):
+                    </span>{" "}
+                    <span>{item.response.userContextInfo}</span>
                   </div>
+
+                  {item.response.links.length > 0 && (
+                    <div className="answer-actions">
+                      {item.response.links.map((lk, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          className="btn answer-action-btn"
+                          onClick={() => go(lk.page, lk.query)}
+                        >
+                          <span>{lk.label}</span>
+                          <span aria-hidden="true">→</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
-            </div>
-          ))
+              </article>
+            ))}
+          </div>
         )}
       </div>
 
       <div className="assistant-input-bar">
         <input
-          aria-label="Digite sua pergunta para o assistente demonstrativo"
+          aria-label="Digite sua pergunta para o assistente"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-          placeholder="Digite uma dúvida sobre ponto, catraca, home office ou justificativas..."
+          placeholder="Ou digite uma dúvida sobre ponto, catraca, home office ou justificativas..."
         />
         <button type="button" className="btn primary" onClick={handleSubmit}>
-          Enviar consulta
+          Consultar
         </button>
         {history.length > 0 && (
           <button type="button" className="btn" onClick={onClear}>
-            Limpar
+            Limpar conversa
           </button>
         )}
       </div>

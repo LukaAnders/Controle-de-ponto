@@ -191,24 +191,29 @@ export default function Assistant() {
     ]);
   };
 
+  const activeQuestion =
+    history.length > 0 ? history[history.length - 1].question : "";
+
   return (
-    <div className="page-stack">
-      <div className="page-header">
+    <div className="page-stack assistant-page">
+      <div className="page-header assistant-header">
         <div>
-          <h1>Assistente Operacional PontoNexo (IA)</h1>
+          <h1>Assistente Operacional</h1>
           <p className="sub">
-            Apoio informativo para dúvidas sobre modalidades de ponto,
-            inconsistências e justificativas. Demonstração local sem envio de
-            dados para APIs externas.
+            Encontre orientações sobre registros de ponto, jornada e
+            justificativas.
           </p>
         </div>
-        <span className="badge info">
-          Escopo ativo: {roles[role].shortLabel}
+        <span className="assistant-role-indicator">
+          Perfil ativo: <strong>{roles[role].shortLabel}</strong>
         </span>
       </div>
 
       <div className="assistant-layout">
-        <AssistantFaqSidebar onSelectQuestion={handleSend} />
+        <AssistantFaqSidebar
+          activeQuestion={activeQuestion}
+          onSelectQuestion={handleSend}
+        />
 
         <AssistantChatPanel
           role={role}

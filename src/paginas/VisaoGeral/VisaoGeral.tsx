@@ -50,10 +50,6 @@ export default function Overview() {
       <div className="overview-top-bar">
         <div className="overview-title-block">
           <h1>Visão operacional</h1>
-          <p className="sub">
-            Segunda-feira, 26 de outubro de 2026 · Controle diário de frequência
-            e ocorrências
-          </p>
         </div>
 
         <div className="overview-top-actions">

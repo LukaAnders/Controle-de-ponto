@@ -8,46 +8,56 @@ const suggestedQuestions = [
 ];
 
 interface AssistantFaqSidebarProps {
+  activeQuestion?: string;
   onSelectQuestion: (q: string) => void;
 }
 
 export default function AssistantFaqSidebar({
+  activeQuestion = "",
   onSelectQuestion,
 }: AssistantFaqSidebarProps) {
   return (
-    <section
-      className="card assistant-sidebar"
+    <aside
+      className="assistant-sidebar"
       aria-label="Perguntas frequentes e limites da IA"
     >
-      <h2>Perguntas frequentes</h2>
-      <p className="sub" style={{ marginTop: 0 }}>
-        Selecione um tópico para simular a orientação contextualizada ao seu
-        perfil de acesso:
-      </p>
-      <div className="faq-list">
-        {suggestedQuestions.map((q) => (
-          <button
-            key={q}
-            type="button"
-            className="faq-btn"
-            onClick={() => onSelectQuestion(q)}
-          >
-            <span>{q}</span>
-            <span aria-hidden="true">→</span>
-          </button>
-        ))}
+      <div className="faq-panel">
+        <div className="faq-panel-header">
+          <h2>Perguntas frequentes</h2>
+        </div>
+
+        <div className="faq-list" role="list">
+          {suggestedQuestions.map((q) => {
+            const isSelected =
+              activeQuestion.trim().toLowerCase() === q.toLowerCase();
+            return (
+              <button
+                key={q}
+                type="button"
+                className={`faq-btn ${isSelected ? "active" : ""}`}
+                aria-current={isSelected ? "true" : undefined}
+                onClick={() => onSelectQuestion(q)}
+              >
+                <span className="faq-btn-text">{q}</span>
+                <span className="faq-btn-icon" aria-hidden="true">
+                  ›
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      <div className="info-box" style={{ marginTop: 12 }}>
-        <strong>Limites e Governança da IA</strong>
+      <div className="governance-note" aria-label="Limites e Governança da IA">
+        <strong className="governance-title">Limites e governança</strong>
         <ul className="compact-bullets">
-          <li>Respostas baseadas em regras mockadas locais.</li>
-          <li>Não inventa saldos de banco de horas nem dados pessoais.</li>
+          <li>Respostas baseadas em regras locais do sistema.</li>
+          <li>Não calcula saldos de banco de horas nem altera dados.</li>
           <li>Respeita o perfil selecionado no cabeçalho.</li>
           <li>Não aprova nem rejeita justificativas automaticamente.</li>
         </ul>
       </div>
-    </section>
+    </aside>
   );
 }
 

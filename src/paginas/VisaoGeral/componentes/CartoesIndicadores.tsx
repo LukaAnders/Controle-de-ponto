@@ -20,9 +20,6 @@ export default function KpiCards({
     >
       <div className="admin-section-bar">
         <h2 className="admin-section-title">{periodLabel}</h2>
-        <span className="admin-section-meta">
-          Indicadores consolidados do escopo selecionado
-        </span>
       </div>
 
       <div className="admin-summary-strip">
