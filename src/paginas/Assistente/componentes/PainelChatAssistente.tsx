@@ -18,6 +18,7 @@ export interface ChatItem {
 interface AssistantChatPanelProps {
   role: Role;
   history: ChatItem[];
+  isLoading?: boolean;
   onSend: (q: string) => void;
   onClear: () => void;
   go: (p: Page, q?: Record<string, string>) => void;
@@ -51,6 +52,7 @@ function renderGuidanceContent(text: string) {
 export default function AssistantChatPanel({
   role,
   history,
+  isLoading = false,
   onSend,
   onClear,
   go,
@@ -58,7 +60,7 @@ export default function AssistantChatPanel({
   const [input, setInput] = useState("");
 
   const handleSubmit = () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isLoading) return;
     onSend(input);
     setInput("");
   };
@@ -124,15 +126,26 @@ export default function AssistantChatPanel({
         <input
           aria-label="Digite sua pergunta para o assistente"
           value={input}
+          disabled={isLoading}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
           placeholder="Ou digite uma dúvida sobre ponto, catraca, home office ou justificativas..."
         />
-        <button type="button" className="btn primary" onClick={handleSubmit}>
-          Consultar
+        <button
+          type="button"
+          className="btn primary"
+          disabled={isLoading}
+          onClick={handleSubmit}
+        >
+          {isLoading ? "Consultando..." : "Consultar"}
         </button>
         {history.length > 0 && (
-          <button type="button" className="btn" onClick={onClear}>
+          <button
+            type="button"
+            className="btn"
+            disabled={isLoading}
+            onClick={onClear}
+          >
             Limpar conversa
           </button>
         )}

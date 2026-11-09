@@ -10,7 +10,30 @@ import "./Assistente.css";
 
 export default function Assistant() {
   const { go, role, employees, occs, recs } = useApp();
-  const [history, setHistory] = useState<ChatItem[]>([]);
+  const [history, setHistory] = useState<ChatItem[]>(() => {
+    try {
+      const saved = localStorage.getItem("pontonexo_assistant_history_v1");
+      return saved ? (JSON.parse(saved) as ChatItem[]) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [isLoading, setIsLoading] = useState(false);
+
+  const saveHistory = (updater: (prev: ChatItem[]) => ChatItem[]) => {
+    setHistory((prev) => {
+      const next = updater(prev);
+      try {
+        localStorage.setItem(
+          "pontonexo_assistant_history_v1",
+          JSON.stringify(next),
+        );
+      } catch {
+        // Ignora erro de localStorage
+      }
+      return next;
+    });
+  };
 
   const selfEmp = employees.find((e) => e.id === SELF) || employees[0];
   const openOccs = occs.filter(
@@ -177,18 +200,79 @@ export default function Assistant() {
     };
   };
 
-  const handleSend = (questionText: string) => {
+  const handleSend = async (questionText: string) => {
     const trimmed = questionText.trim();
-    if (!trimmed) return;
-    const resp = buildResponse(trimmed);
-    setHistory((prev) => [
+    if (!trimmed || isLoading) return;
+
+    setIsLoading(true);
+    let resp: AssistantResponse | null = null;
+
+    const contextPayload = {
+      perfilAtivo: roles[role].label,
+      resumoPerfil: roles[role].shortLabel,
+      usuarioLogado: roles[role].user,
+      paginasPermitidas: roles[role].pages,
+      totalFuncionariosVisiveis: employees.length,
+      ocorrenciasTotaisVisiveis: occs.length,
+      ocorrenciasAbertas: openOccs.length,
+      ocorrenciasIncompletasAbertas: openOccs.filter(
+        (o) => o.type === "incompleto",
+      ).length,
+      registrosRecentesVisiveis: recs.length,
+      funcionarioProprio: selfEmp
+        ? {
+            nome: selfEmp.name,
+            matricula: selfEmp.reg,
+            modalidade: selfEmp.mode,
+            homeOfficeAutorizado:
+              selfEmp.remote.allowed && selfEmp.remote.until >= TODAY,
+            homeOfficeValidade: formatDateBR(selfEmp.remote.until),
+          }
+        : null,
+    };
+
+    try {
+      const apiRes = await fetch("/api/assistente", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: trimmed,
+          context: contextPayload,
+        }),
+      });
+
+      if (apiRes.ok) {
+        const data = await apiRes.json();
+        if (data && data.intent && data.generalGuidance) {
+          resp = {
+            intent: String(data.intent),
+            generalGuidance: String(data.generalGuidance),
+            userContextInfo: String(
+              data.userContextInfo ||
+                `Visualização aplicada ao perfil ${roles[role].shortLabel}.`,
+            ),
+            links: Array.isArray(data.links) ? data.links : [],
+          };
+        }
+      }
+    } catch {
+      // Usa o fallback local caso esteja rodando sem o endpoint serverless
+    }
+
+    if (!resp) {
+      resp = buildResponse(trimmed);
+    }
+
+    const finalResp = resp;
+    saveHistory((prev) => [
       ...prev,
       {
         id: "m" + Date.now() + Math.random(),
         question: trimmed,
-        response: resp,
+        response: finalResp,
       },
     ]);
+    setIsLoading(false);
   };
 
   const activeQuestion =
@@ -218,8 +302,9 @@ export default function Assistant() {
         <AssistantChatPanel
           role={role}
           history={history}
+          isLoading={isLoading}
           onSend={handleSend}
-          onClear={() => setHistory([])}
+          onClear={() => saveHistory(() => [])}
           go={go}
         />
       </div>

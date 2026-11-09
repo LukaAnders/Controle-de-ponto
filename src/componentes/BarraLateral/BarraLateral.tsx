@@ -48,7 +48,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ onOpenPrivacy }: SidebarProps) {
-  const { role, page, go, occs, sidebarCollapsed } = useApp();
+  const { role, page, go, occs, sidebarCollapsed, resetDemoData } = useApp();
 
   const openOccsCount = occs.filter(
     (o) => o.status === "Pendente" || o.status === "Em análise",
@@ -117,6 +117,21 @@ export default function Sidebar({ onOpenPrivacy }: SidebarProps) {
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
             <span>Privacidade e LGPD</span>
+          </span>
+        </button>
+
+        <button
+          type="button"
+          className="nav-btn nav-btn-reset"
+          onClick={resetDemoData}
+          title="Restaurar cadastros, batidas e ocorrências iniciais no localStorage"
+        >
+          <span className="nav-btn-left">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <polyline points="1 4 1 10 7 10" />
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+            </svg>
+            <span>Restaurar dados iniciais</span>
           </span>
         </button>
       </nav>

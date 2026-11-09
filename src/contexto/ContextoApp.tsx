@@ -1,6 +1,23 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Employee, Occ, OccStatus, Page, Rec, Role } from "../tipos";
 import { employees0, occurrences0, records0, now } from "../dados/dadosSimulados";
+
+const STORAGE_KEYS = {
+  role: "pontonexo_role_v1",
+  employees: "pontonexo_employees_v1",
+  occs: "pontonexo_occs_v1",
+  recs: "pontonexo_recs_v1",
+};
+
+function loadFromStorage<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
 
 export const pageNames: Record<Page, string> = {
   overview: "Visão operacional",
@@ -76,20 +93,61 @@ export interface AppContextValue {
   addRec: (r: Omit<Rec, "id" | "time">[]) => void;
   actOcc: (id: string, s: OccStatus, label: string, note?: string) => void;
   addOcc: (o: Omit<Occ, "id" | "requestedAt" | "history" | "status">) => void;
+  resetDemoData: () => void;
 }
 
 const Ctx = createContext<AppContextValue>(null as unknown as AppContextValue);
 export const useApp = () => useContext(Ctx);
 
 export function Provider({ children }: { children: ReactNode }) {
-  const [role, setRoleS] = useState<Role>("rh");
+  const [role, setRoleS] = useState<Role>(() =>
+    loadFromStorage<Role>(STORAGE_KEYS.role, "rh"),
+  );
   const [page, setPage] = useState<Page>("overview");
   const [query, setQuery] = useState<Record<string, string>>({});
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [employees, setEmp] = useState<Employee[]>(employees0);
-  const [allOccs, setOccs] = useState<Occ[]>(occurrences0);
-  const [allRecs, setRecs] = useState<Rec[]>(records0);
+  const [employees, setEmp] = useState<Employee[]>(() =>
+    loadFromStorage<Employee[]>(STORAGE_KEYS.employees, employees0),
+  );
+  const [allOccs, setOccs] = useState<Occ[]>(() =>
+    loadFromStorage<Occ[]>(STORAGE_KEYS.occs, occurrences0),
+  );
+  const [allRecs, setRecs] = useState<Rec[]>(() =>
+    loadFromStorage<Rec[]>(STORAGE_KEYS.recs, records0),
+  );
   const [toast, setToast] = useState("");
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.role, JSON.stringify(role));
+    } catch {
+      // Ignora erro de cota/privacidade do navegador
+    }
+  }, [role]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.employees, JSON.stringify(employees));
+    } catch {
+      // Ignora erro de cota/privacidade do navegador
+    }
+  }, [employees]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.occs, JSON.stringify(allOccs));
+    } catch {
+      // Ignora erro de cota/privacidade do navegador
+    }
+  }, [allOccs]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.recs, JSON.stringify(allRecs));
+    } catch {
+      // Ignora erro de cota/privacidade do navegador
+    }
+  }, [allRecs]);
 
   const notify = (m: string) => {
     setToast(m);
@@ -209,6 +267,23 @@ export function Provider({ children }: { children: ReactNode }) {
       };
       setOccs((prev) => [newOcc, ...prev]);
       notify("Solicitação registrada para análise do RH (demonstrativo).");
+    },
+    resetDemoData: () => {
+      setEmp(employees0);
+      setOccs(occurrences0);
+      setRecs(records0);
+      setRoleS("rh");
+      setPage("overview");
+      setQuery({});
+      try {
+        localStorage.removeItem(STORAGE_KEYS.employees);
+        localStorage.removeItem(STORAGE_KEYS.occs);
+        localStorage.removeItem(STORAGE_KEYS.recs);
+        localStorage.removeItem(STORAGE_KEYS.role);
+      } catch {
+        // Ignora erro
+      }
+      notify("Dados iniciais da demonstração restaurados no navegador.");
     },
   };
 
