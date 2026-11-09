@@ -12,7 +12,8 @@ export default function Assistant() {
   const { go, role, employees, occs, recs } = useApp();
   const [history, setHistory] = useState<ChatItem[]>(() => {
     try {
-      const saved = localStorage.getItem("pontonexo_assistant_history_v1");
+      localStorage.removeItem("pontonexo_assistant_history_v1");
+      const saved = localStorage.getItem("pontonexo_assistant_history_v2");
       return saved ? (JSON.parse(saved) as ChatItem[]) : [];
     } catch {
       return [];
@@ -25,7 +26,7 @@ export default function Assistant() {
       const next = updater(prev);
       try {
         localStorage.setItem(
-          "pontonexo_assistant_history_v1",
+          "pontonexo_assistant_history_v2",
           JSON.stringify(next),
         );
       } catch {
@@ -292,18 +293,18 @@ export default function Assistant() {
 
     const finalResp = resp;
     saveHistory((prev) => [
-      ...prev,
       {
         id: "m" + Date.now() + Math.random(),
         question: trimmed,
         response: finalResp,
       },
+      ...prev,
     ]);
     setIsLoading(false);
   };
 
   const activeQuestion =
-    history.length > 0 ? history[history.length - 1].question : "";
+    history.length > 0 ? history[0].question : "";
 
   return (
     <div className="page-stack assistant-page">
