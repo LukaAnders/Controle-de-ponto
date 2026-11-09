@@ -236,7 +236,7 @@ export default function Assistant() {
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 25000);
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
 
       try {
         const apiRes = await fetch("/api/assistente", {
