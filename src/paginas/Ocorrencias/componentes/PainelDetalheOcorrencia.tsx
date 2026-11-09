@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { formatDateBR, typeLabel } from "../../../dados/dadosSimulados";
 import { Employee, Occ, OccStatus, Role } from "../../../tipos";
+import { isTerminalStatus } from "../regrasOcorrencia";
 import { statusBadgeClass } from "./TabelaOcorrencias";
 
 const actionsList: { label: string; nextStatus: OccStatus; variant: string }[] =
@@ -125,7 +126,11 @@ export default function OccurrenceDetailPanel({
       {role !== "funcionario" && (
         <div className="detail-block">
           <h3>Deliberação do RH / Liderança</h3>
-          {pendAction ? (
+          {isTerminalStatus(occurrence.status) ? (
+            <p className="sub" style={{ margin: 0 }}>
+              Esta ocorrência foi finalizada e não aceita novas decisões.
+            </p>
+          ) : pendAction ? (
             <div
               className="confirm-box"
               role="region"
