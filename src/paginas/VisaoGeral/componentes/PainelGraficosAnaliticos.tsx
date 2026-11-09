@@ -41,10 +41,6 @@ export default function PainelGraficosAnaliticos({
           <h2 id="charts-section-heading" className="admin-section-title">
             Análise gráfica de jornada e ocorrências
           </h2>
-          <span className="admin-section-meta">
-            Evolução da frequência, proporção de inconsistências e distribuição
-            por modalidade de ponto
-          </span>
         </div>
 
         <div
@@ -81,10 +77,6 @@ export default function PainelGraficosAnaliticos({
               <div className="chart-panel-header">
                 <div>
                   <h3 className="chart-title">Frequência dos funcionários</h3>
-                  <span className="chart-subtitle">
-                    Evolução da presença dos colaboradores ativos ao longo do
-                    período selecionado
-                  </span>
                 </div>
                 <div className="chart-kpi-badges">
                   <span className="badge ok">Máx: {maxFreq}%</span>
@@ -129,11 +121,6 @@ export default function PainelGraficosAnaliticos({
                   <h3 className="chart-title">
                     Horas trabalhadas (Previstas vs. Realizadas)
                   </h3>
-                  <span className="chart-subtitle">
-                    Comparativo individual de horas cumpridas no período (Total:{" "}
-                    {formatHours(analytics.totalWorkedHours)} de{" "}
-                    {formatHours(analytics.totalExpectedHours)})
-                  </span>
                 </div>
                 <div className="chart-legend-inline">
                   <span>

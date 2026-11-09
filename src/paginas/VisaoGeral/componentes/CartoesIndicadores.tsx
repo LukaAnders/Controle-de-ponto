@@ -19,13 +19,9 @@ export default function KpiCards({ analytics }: KpiCardsProps) {
       <div className="admin-section-bar">
         <div>
           <h2 className="admin-section-title">{analytics.periodLabel}</h2>
-          <span className="admin-section-meta">
-            Indicadores consolidados de frequência, horas trabalhadas,
-            ocorrências e meios de registro
-          </span>
         </div>
         <span className="kpi-period-pill">
-          Período: <strong>{analytics.periodRangeLabel}</strong>
+<strong>{analytics.periodRangeLabel}</strong>
         </span>
       </div>
 
