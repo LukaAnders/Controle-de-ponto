@@ -39,6 +39,7 @@ function loadFromStorage<T>(key: string, fallback: T): T {
 export const pageNames: Record<Page, string> = {
   overview: "Visão operacional",
   punch: "Central de Ponto",
+  timebank: "Banco de horas",
   employees: "Funcionários",
   occurrences: "Ocorrências e justificativas",
   assistant: "Assistente de IA",
@@ -85,7 +86,7 @@ export const roles: Record<
     userRole: "Desenvolvedora Pleno · Matrícula 1001",
     avatar: "AS",
     scopeNote: "Acesso individual restrito aos próprios registros",
-    pages: ["punch", "occurrences", "assistant"],
+    pages: ["punch", "timebank", "occurrences", "assistant"],
   },
 };
 

@@ -6,6 +6,7 @@ import Toast from "./componentes/AvisoFlutuante/AvisoFlutuante";
 import PrivacyModal from "./componentes/ModalPrivacidade/ModalPrivacidade";
 import Overview from "./paginas/VisaoGeral/VisaoGeral";
 import Punch from "./paginas/Ponto/Ponto";
+import TimeBank from "./paginas/BancoDeHoras/BancoDeHoras";
 import Employees from "./paginas/Funcionarios/Funcionarios";
 import Occurrences from "./paginas/Ocorrencias/Ocorrencias";
 import Assistant from "./paginas/Assistente/Assistente";
@@ -27,6 +28,7 @@ function AppContent() {
   const CurrentPage = {
     overview: Overview,
     punch: Punch,
+    timebank: TimeBank,
     employees: Employees,
     occurrences: Occurrences,
     assistant: Assistant,

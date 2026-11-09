@@ -7,6 +7,7 @@ import EmployeeTable from "./componentes/TabelaFuncionarios";
 import EmployeeScheduleGrid from "./componentes/GradeEscalaFuncionario";
 import EmployeeDetailPanel from "./componentes/PainelDetalheFuncionario";
 import EmployeeFormModal from "./componentes/ModalFormularioFuncionario";
+import BancoDeHoras from "../BancoDeHoras/BancoDeHoras";
 import "./Funcionarios.css";
 
 const blank = (): Employee => ({
@@ -27,7 +28,9 @@ const blank = (): Employee => ({
 
 export default function Employees() {
   const { employees, recs, occs, saveEmployee, go, role } = useApp();
-  const [viewMode, setViewMode] = useState<"table" | "schedule">("table");
+  const [viewMode, setViewMode] = useState<"table" | "schedule" | "timebank">(
+    "table",
+  );
   const [q, setQ] = useState("");
   const [d, setD] = useState("");
   const [s, setS] = useState("");
@@ -137,6 +140,15 @@ export default function Employees() {
             >
               Escala Semanal
             </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={viewMode === "timebank"}
+              className={`view-tab-btn ${viewMode === "timebank" ? "active" : ""}`}
+              onClick={() => setViewMode("timebank")}
+            >
+              Banco de Horas
+            </button>
           </div>
 
           {role === "rh" && (
@@ -154,84 +166,90 @@ export default function Employees() {
         </div>
       </div>
 
-      <EmployeeFilters
-        q={q}
-        setQ={setQ}
-        d={d}
-        setD={setD}
-        m={m}
-        setM={setM}
-        s={s}
-        setS={setS}
-        role={role}
-        onClear={() => {
-          setQ("");
-          setD("");
-          setS("");
-          setM("");
-        }}
-      />
-
-      <section className="employee-overview" aria-label="Resumo da equipe">
-        <div className="employee-overview-copy">
-          <span className="eyebrow">VISÃO DA EQUIPE</span>
-          <strong>
-            {viewMode === "schedule"
-              ? "Cobertura prevista para a semana"
-              : "Panorama dos colaboradores filtrados"}
-          </strong>
-          <span>Os indicadores acompanham os filtros aplicados acima.</span>
-        </div>
-        <div className="employee-metrics">
-          <div className="employee-metric">
-            <span>Colaboradores</span>
-            <strong>{list.length}</strong>
-          </div>
-          <div className="employee-metric success">
-            <span>Ativos</span>
-            <strong>{activeEmployees.length}</strong>
-          </div>
-          <div className="employee-metric info">
-            <span>Home office</span>
-            <strong>{remoteEmployees.length}</strong>
-          </div>
-          <div className="employee-metric warning">
-            <span>Revisar permissão</span>
-            <strong>{pendingRemote.length}</strong>
-          </div>
-        </div>
-      </section>
-
-      <div className="split">
-        {viewMode === "table" ? (
-          <EmployeeTable
-            list={list}
-            detailId={detailId}
+      {viewMode === "timebank" ? (
+        <BancoDeHoras embedded />
+      ) : (
+        <>
+          <EmployeeFilters
+            q={q}
+            setQ={setQ}
+            d={d}
+            setD={setD}
+            m={m}
+            setM={setM}
+            s={s}
+            setS={setS}
             role={role}
-            onSelectDetail={setDetailId}
-            onEdit={handleOpenEdit}
+            onClear={() => {
+              setQ("");
+              setD("");
+              setS("");
+              setM("");
+            }}
           />
-        ) : (
-          <EmployeeScheduleGrid
-            list={list}
-            detailId={detailId}
-            onSelectDetail={setDetailId}
-          />
-        )}
 
-        {selectedEmp && (
-          <EmployeeDetailPanel
-            employee={selectedEmp}
-            empRecs={empRecs}
-            empOccs={empOccs}
-            role={role}
-            onClose={() => setDetailId("")}
-            onEdit={handleOpenEdit}
-            onToggleActive={(e) => saveEmployee({ ...e, active: !e.active })}
-            go={go}
-          />
-        )}
-      </div>
+          <section className="employee-overview" aria-label="Resumo da equipe">
+            <div className="employee-overview-copy">
+              <span className="eyebrow">VISÃO DA EQUIPE</span>
+              <strong>
+                {viewMode === "schedule"
+                  ? "Cobertura prevista para a semana"
+                  : "Panorama dos colaboradores filtrados"}
+              </strong>
+              <span>Os indicadores acompanham os filtros aplicados acima.</span>
+            </div>
+            <div className="employee-metrics">
+              <div className="employee-metric">
+                <span>Colaboradores</span>
+                <strong>{list.length}</strong>
+              </div>
+              <div className="employee-metric success">
+                <span>Ativos</span>
+                <strong>{activeEmployees.length}</strong>
+              </div>
+              <div className="employee-metric info">
+                <span>Home office</span>
+                <strong>{remoteEmployees.length}</strong>
+              </div>
+              <div className="employee-metric warning">
+                <span>Revisar permissão</span>
+                <strong>{pendingRemote.length}</strong>
+              </div>
+            </div>
+          </section>
+
+          <div className="split">
+            {viewMode === "table" ? (
+              <EmployeeTable
+                list={list}
+                detailId={detailId}
+                role={role}
+                onSelectDetail={setDetailId}
+                onEdit={handleOpenEdit}
+              />
+            ) : (
+              <EmployeeScheduleGrid
+                list={list}
+                detailId={detailId}
+                onSelectDetail={setDetailId}
+              />
+            )}
+
+            {selectedEmp && (
+              <EmployeeDetailPanel
+                employee={selectedEmp}
+                empRecs={empRecs}
+                empOccs={empOccs}
+                role={role}
+                onClose={() => setDetailId("")}
+                onEdit={handleOpenEdit}
+                onToggleActive={(e) => saveEmployee({ ...e, active: !e.active })}
+                go={go}
+              />
+            )}
+          </div>
+        </>
+      )}
 
       {ed && (
         <EmployeeFormModal

@@ -83,6 +83,7 @@ export interface Occ {
 export type Page =
   | "overview"
   | "punch"
+  | "timebank"
   | "employees"
   | "occurrences"
   | "assistant";
