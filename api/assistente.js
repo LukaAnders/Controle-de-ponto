@@ -62,13 +62,11 @@ Retorne APENAS um objeto JSON válido com exatamente estas propriedades:
 }
 (Nota: em "links", o campo "page" deve ser apenas um destes: "overview", "punch", "employees" ou "occurrences").`;
 
-    // 1. Descobre automaticamente os modelos disponíveis na chave do usuário
+    // 1. Descobre automaticamente os modelos de texto disponíveis na chave do usuário
     let candidateModels = [
       "gemini-2.5-flash",
       "gemini-2.5-flash-lite",
-      "gemini-3-flash-preview",
       "gemini-2.0-flash",
-      "gemini-flash-latest",
     ];
 
     try {
@@ -82,15 +80,33 @@ Retorne APENAS um objeto JSON válido com exatamente estas propriedades:
             (m) =>
               Array.isArray(m.supportedGenerationMethods) &&
               m.supportedGenerationMethods.includes("generateContent") &&
-              m.name.includes("gemini"),
+              m.name.includes("gemini") &&
+              !m.name.includes("tts") &&
+              !m.name.includes("image") &&
+              !m.name.includes("audio") &&
+              !m.name.includes("live") &&
+              !m.name.includes("vision") &&
+              !m.name.includes("embedding"),
           )
           .map((m) => m.name.replace(/^models\//, ""));
 
         if (available.length > 0) {
-          // Prioriza modelos flash disponíveis na conta
-          const flashModels = available.filter((n) => n.includes("flash"));
-          const otherModels = available.filter((n) => !n.includes("flash"));
-          candidateModels = [...flashModels, ...otherModels];
+          const preferred = [
+            "gemini-2.5-flash-lite",
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-2.0-flash-lite",
+            "gemini-flash-latest",
+          ].filter((p) => available.includes(p));
+
+          const others = available.filter(
+            (n) => !preferred.includes(n) && n.includes("flash"),
+          );
+          const proModels = available.filter(
+            (n) => !preferred.includes(n) && !n.includes("flash"),
+          );
+
+          candidateModels = [...preferred, ...others, ...proModels];
         }
       }
     } catch {
@@ -99,7 +115,7 @@ Retorne APENAS um objeto JSON válido com exatamente estas propriedades:
 
     const errors = [];
 
-    for (const model of candidateModels.slice(0, 5)) {
+    for (const model of candidateModels.slice(0, 4)) {
       try {
         const response = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
@@ -138,7 +154,6 @@ Retorne APENAS um objeto JSON válido com exatamente estas propriedades:
           continue;
         }
 
-        // Extrai o bloco JSON mesmo se vier com texto ou markdown em volta
         const jsonMatch = rawText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           try {
@@ -151,7 +166,6 @@ Retorne APENAS um objeto JSON válido com exatamente estas propriedades:
           }
         }
 
-        // Fallback caso o Gemini responda em texto corrido em vez de JSON
         return res.status(200).json({
           intent: "Orientação do Assistente Operacional",
           generalGuidance: rawText.replace(/```json|```/g, "").trim(),
