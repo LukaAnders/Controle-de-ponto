@@ -231,6 +231,8 @@ export default function Assistant() {
         : null,
     };
 
+    let apiErrorNote = "";
+
     try {
       const apiRes = await fetch("/api/assistente", {
         method: "POST",
@@ -244,6 +246,19 @@ export default function Assistant() {
       if (apiRes.ok) {
         const data = await apiRes.json();
         if (data && data.intent && data.generalGuidance) {
+          const allowedPages = roles[role].pages;
+          const validLinks = Array.isArray(data.links)
+            ? data.links.filter(
+                (lk: { label?: string; page?: string }) =>
+                  lk &&
+                  typeof lk.label === "string" &&
+                  typeof lk.page === "string" &&
+                  allowedPages.includes(
+                    lk.page as (typeof allowedPages)[number],
+                  ),
+              )
+            : [];
+
           resp = {
             intent: String(data.intent),
             generalGuidance: String(data.generalGuidance),
@@ -251,8 +266,14 @@ export default function Assistant() {
               data.userContextInfo ||
                 `Visualização aplicada ao perfil ${roles[role].shortLabel}.`,
             ),
-            links: Array.isArray(data.links) ? data.links : [],
+            links: validLinks,
           };
+        }
+      } else {
+        const errData = await apiRes.json().catch(() => null);
+        if (errData?.error) {
+          apiErrorNote = String(errData.error);
+          console.warn("Aviso /api/assistente:", apiErrorNote);
         }
       }
     } catch {
@@ -261,6 +282,12 @@ export default function Assistant() {
 
     if (!resp) {
       resp = buildResponse(trimmed);
+      if (apiErrorNote) {
+        resp = {
+          ...resp,
+          userContextInfo: `${resp.userContextInfo} (Status da API na Vercel: ${apiErrorNote})`,
+        };
+      }
     }
 
     const finalResp = resp;
