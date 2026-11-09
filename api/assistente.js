@@ -132,7 +132,7 @@ Retorne APENAS um objeto JSON válido com exatamente estas propriedades:
 
     // 1. Tenta direto os modelos mais rápidos (sem gastar tempo listando antes)
     const fastCandidates = [
-      { model: process.env.GEMINI_MODEL || "gemini-2.5-flash", disableThinking: true },
+      { model: process.env.GEMINI_MODEL || "gemini-3.8-flash", disableThinking: false },
     ];
 
     const errors = [];
