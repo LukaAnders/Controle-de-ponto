@@ -235,72 +235,83 @@ export default function Assistant() {
     let apiErrorNote = "";
 
     try {
-      const apiRes = await fetch("/api/assistente", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question: trimmed,
-          context: contextPayload,
-        }),
-      });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 9000);
 
-      if (apiRes.ok) {
-        const data = await apiRes.json();
-        if (data && data.intent && data.generalGuidance) {
-          const allowedPages = roles[role].pages;
-          const validLinks = Array.isArray(data.links)
-            ? data.links.filter(
-                (lk: { label?: string; page?: string }) =>
-                  lk &&
-                  typeof lk.label === "string" &&
-                  typeof lk.page === "string" &&
-                  allowedPages.includes(
-                    lk.page as (typeof allowedPages)[number],
-                  ),
-              )
-            : [];
+      try {
+        const apiRes = await fetch("/api/assistente", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            question: trimmed,
+            context: contextPayload,
+          }),
+          signal: controller.signal,
+        });
 
-          resp = {
-            intent: String(data.intent),
-            generalGuidance: String(data.generalGuidance),
-            userContextInfo: String(
-              data.userContextInfo ||
-                `Visualização aplicada ao perfil ${roles[role].shortLabel}.`,
-            ),
-            links: validLinks,
-          };
+        if (apiRes.ok) {
+          const data = await apiRes.json();
+          if (data && data.intent && data.generalGuidance) {
+            const allowedPages = roles[role].pages;
+            const validLinks = Array.isArray(data.links)
+              ? data.links.filter(
+                  (lk: { label?: string; page?: string }) =>
+                    lk &&
+                    typeof lk.label === "string" &&
+                    typeof lk.page === "string" &&
+                    allowedPages.includes(
+                      lk.page as (typeof allowedPages)[number],
+                    ),
+                )
+              : [];
+
+            resp = {
+              intent: String(data.intent),
+              generalGuidance: String(data.generalGuidance),
+              userContextInfo: String(
+                data.userContextInfo ||
+                  `Visualização aplicada ao perfil ${roles[role].shortLabel}.`,
+              ),
+              links: validLinks,
+            };
+          }
+        } else {
+          const errData = await apiRes.json().catch(() => null);
+          if (errData?.error) {
+            apiErrorNote = String(errData.error);
+            console.warn("Aviso /api/assistente:", apiErrorNote);
+          }
         }
-      } else {
-        const errData = await apiRes.json().catch(() => null);
-        if (errData?.error) {
-          apiErrorNote = String(errData.error);
-          console.warn("Aviso /api/assistente:", apiErrorNote);
-        }
+      } finally {
+        clearTimeout(timeoutId);
       }
     } catch {
-      // Usa o fallback local caso esteja rodando sem o endpoint serverless
+      // Usa o fallback local caso esteja rodando sem o endpoint serverless ou dê timeout
     }
 
-    if (!resp) {
-      resp = buildResponse(trimmed);
-      if (apiErrorNote) {
-        resp = {
-          ...resp,
-          userContextInfo: `${resp.userContextInfo} (Status da API na Vercel: ${apiErrorNote})`,
-        };
+    try {
+      if (!resp) {
+        resp = buildResponse(trimmed);
+        if (apiErrorNote) {
+          resp = {
+            ...resp,
+            userContextInfo: `${resp.userContextInfo} (Status da API na Vercel: ${apiErrorNote})`,
+          };
+        }
       }
-    }
 
-    const finalResp = resp;
-    saveHistory((prev) => [
-      {
-        id: "m" + Date.now() + Math.random(),
-        question: trimmed,
-        response: finalResp,
-      },
-      ...prev,
-    ]);
-    setIsLoading(false);
+      const finalResp = resp;
+      saveHistory((prev) => [
+        {
+          id: "m" + Date.now() + Math.random(),
+          question: trimmed,
+          response: finalResp,
+        },
+        ...prev,
+      ]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const activeQuestion =

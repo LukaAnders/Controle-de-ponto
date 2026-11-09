@@ -12,8 +12,7 @@ export default async function handler(req, res) {
 
   if (!apiKey) {
     return res.status(503).json({
-      error:
-        "Variável GEMINI_API_KEY não encontrada no servidor da Vercel.",
+      error: "Variável GEMINI_API_KEY não encontrada no servidor da Vercel.",
     });
   }
 
@@ -62,13 +61,88 @@ Retorne APENAS um objeto JSON válido com exatamente estas propriedades:
 }
 (Nota: em "links", o campo "page" deve ser apenas um destes: "overview", "punch", "employees" ou "occurrences").`;
 
-    // 1. Descobre automaticamente os modelos de texto disponíveis na chave do usuário
-    let candidateModels = [
-      "gemini-2.5-flash",
-      "gemini-2.5-flash-lite",
-      "gemini-2.0-flash",
+    const tryGenerate = async (model, disableThinking) => {
+      const generationConfig = {
+        temperature: 0.2,
+        ...(disableThinking ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+      };
+
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig,
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const errTxt = await response.text();
+        return { ok: false, error: `${model} (${response.status}): ${errTxt.slice(0, 120)}` };
+      }
+
+      const data = await response.json();
+      const parts = data?.candidates?.[0]?.content?.parts || [];
+      const rawText = parts
+        .map((p) => p.text || "")
+        .join("\n")
+        .trim();
+
+      if (!rawText) {
+        return { ok: false, error: `${model}: resposta vazia` };
+      }
+
+      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          const parsed = JSON.parse(jsonMatch[0]);
+          if (parsed.intent && parsed.generalGuidance) {
+            return { ok: true, data: parsed };
+          }
+        } catch {
+          // Usa fallback de texto corrido abaixo
+        }
+      }
+
+      return {
+        ok: true,
+        data: {
+          intent: "Orientação do Assistente Operacional",
+          generalGuidance: rawText.replace(/```json|```/g, "").trim(),
+          userContextInfo: `Resposta gerada para o perfil ${context?.resumoPerfil || "atual"}.`,
+          links: [
+            { label: "Abrir Central de Ponto", page: "punch" },
+            { label: "Ver Ocorrências e Justificativas", page: "occurrences" },
+          ],
+        },
+      };
+    };
+
+    // 1. Tenta direto os modelos mais rápidos (sem gastar tempo listando antes)
+    const fastCandidates = [
+      { model: "gemini-2.5-flash", disableThinking: true },
+      { model: "gemini-2.5-flash-lite", disableThinking: true },
+      { model: "gemini-2.0-flash", disableThinking: false },
     ];
 
+    const errors = [];
+
+    for (const item of fastCandidates) {
+      try {
+        const result = await tryGenerate(item.model, item.disableThinking);
+        if (result.ok) {
+          return res.status(200).json(result.data);
+        }
+        errors.push(result.error);
+      } catch (e) {
+        errors.push(`${item.model}: ${e instanceof Error ? e.message : "erro"}`);
+      }
+    }
+
+    // 2. Se nenhum dos 3 diretos funcionou, consulta ListModels para descobrir o nome exato na conta
     try {
       const listRes = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
@@ -85,101 +159,20 @@ Retorne APENAS um objeto JSON válido com exatamente estas propriedades:
               !m.name.includes("image") &&
               !m.name.includes("audio") &&
               !m.name.includes("live") &&
-              !m.name.includes("vision") &&
               !m.name.includes("embedding"),
           )
           .map((m) => m.name.replace(/^models\//, ""));
 
-        if (available.length > 0) {
-          const preferred = [
-            "gemini-2.5-flash-lite",
-            "gemini-2.5-flash",
-            "gemini-2.0-flash",
-            "gemini-2.0-flash-lite",
-            "gemini-flash-latest",
-          ].filter((p) => available.includes(p));
-
-          const others = available.filter(
-            (n) => !preferred.includes(n) && n.includes("flash"),
-          );
-          const proModels = available.filter(
-            (n) => !preferred.includes(n) && !n.includes("flash"),
-          );
-
-          candidateModels = [...preferred, ...others, ...proModels];
+        for (const dynModel of available.slice(0, 2)) {
+          const result = await tryGenerate(dynModel, false);
+          if (result.ok) {
+            return res.status(200).json(result.data);
+          }
+          errors.push(result.error);
         }
       }
     } catch {
-      // Se falhar a listagem, mantém a lista padrão
-    }
-
-    const errors = [];
-
-    for (const model of candidateModels.slice(0, 4)) {
-      try {
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [
-                {
-                  role: "user",
-                  parts: [{ text: prompt }],
-                },
-              ],
-              generationConfig: {
-                temperature: 0.2,
-              },
-            }),
-          },
-        );
-
-        if (!response.ok) {
-          const errTxt = await response.text();
-          errors.push(`${model} (${response.status}): ${errTxt.slice(0, 140)}`);
-          continue;
-        }
-
-        const data = await response.json();
-        const parts = data?.candidates?.[0]?.content?.parts || [];
-        const rawText = parts
-          .map((p) => p.text || "")
-          .join("\n")
-          .trim();
-
-        if (!rawText) {
-          errors.push(`${model}: resposta vazia`);
-          continue;
-        }
-
-        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          try {
-            const parsed = JSON.parse(jsonMatch[0]);
-            if (parsed.intent && parsed.generalGuidance) {
-              return res.status(200).json(parsed);
-            }
-          } catch {
-            // Se o JSON interno tiver formatação inválida, usa o texto direto abaixo
-          }
-        }
-
-        return res.status(200).json({
-          intent: "Orientação do Assistente Operacional",
-          generalGuidance: rawText.replace(/```json|```/g, "").trim(),
-          userContextInfo: `Resposta gerada para o perfil ${context?.resumoPerfil || "atual"}.`,
-          links: [
-            { label: "Abrir Central de Ponto", page: "punch" },
-            { label: "Ver Ocorrências e Justificativas", page: "occurrences" },
-          ],
-        });
-      } catch (loopErr) {
-        errors.push(
-          `${model}: ${loopErr instanceof Error ? loopErr.message : "erro"}`,
-        );
-      }
+      // Ignora erro na listagem secundária
     }
 
     return res.status(502).json({
