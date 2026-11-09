@@ -18,10 +18,7 @@ export default function ResumoDiscussaoPeriodo({
           <h2 id="results-discussion-heading" className="admin-section-title">
             Análise dos resultados e discussão do período
           </h2>
-          <span className="admin-section-meta">
-            Síntese interpretativa gerada automaticamente a partir dos
-            indicadores, registros e ocorrências filtrados
-          </span>
+          
         </div>
         <span className="badge info">Apoio à decisão do RH</span>
       </div>

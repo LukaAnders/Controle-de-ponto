@@ -40,7 +40,7 @@ export interface ModalityUsageItem {
   punchCount: number;
   accessOnlyCount: number;
   pct: number;
-  description: string;
+  description: string | null;
   color: string;
 }
 
@@ -414,7 +414,7 @@ export function computeDashboardAnalytics(
       accessOnlyCount: 0,
       pct: digPct,
       description:
-        "Marcações remotas e híbridas com verificação facial simulada e validação de permissão.",
+        null,
       color: "#2563eb",
     },
     {
@@ -424,7 +424,7 @@ export function computeDashboardAnalytics(
       accessOnlyCount: accessCatracaCount,
       pct: catPct,
       description:
-        "Terminal de recepção que separa batidas de jornada de giros exclusivos de acesso físico.",
+        null,
       color: "#0f172a",
     },
     {
@@ -434,7 +434,7 @@ export function computeDashboardAnalytics(
       accessOnlyCount: 0,
       pct: convPct,
       description:
-        "Equipamento tradicional de parede utilizado em regime presencial por matrícula.",
+        null,
       color: "#0284c7",
     },
   ];
