@@ -1,14 +1,18 @@
 import { useState } from "react";
 import { useApp } from "../../contexto/ContextoApp";
-import { base, depts } from "../../dados/dadosSimulados";
+import { depts } from "../../dados/dadosSimulados";
 import KpiCards from "./componentes/CartoesIndicadores";
+import PainelGraficosAnaliticos from "./componentes/PainelGraficosAnaliticos";
+import ResumoDiscussaoPeriodo from "./componentes/ResumoDiscussaoPeriodo";
+import SecaoRelatoriosDisponiveis from "./componentes/SecaoRelatoriosDisponiveis";
 import RhPrioritiesTable from "./componentes/TabelaPrioridadesRh";
 import LiveTeamSidebar from "./componentes/PainelEquipeAoVivo";
+import { PeriodKey, computeDashboardAnalytics } from "./dadosAnaliticos";
 import "./VisaoGeral.css";
 
 export default function Overview() {
-  const { occs, employees, recs, go, role } = useApp();
-  const [period, setPeriod] = useState<"dia" | "semana" | "mes">("dia");
+  const { occs, employees, recs, go, role, notify } = useApp();
+  const [period, setPeriod] = useState<PeriodKey>("semana");
   const [deptFilter, setDeptFilter] = useState("");
   const [modeFilter, setModeFilter] = useState("");
 
@@ -26,30 +30,23 @@ export default function Overview() {
       (o.status === "Pendente" || o.status === "Em análise"),
   );
 
-  const isFiltered = Boolean(deptFilter || modeFilter || role !== "rh");
-
-  const activeCount = isFiltered
-    ? filteredEmployees.filter((e) => e.active).length * 15
-    : base.active;
-  const presentCount = isFiltered
-    ? Math.max(0, activeCount - 4)
-    : base.present;
-  const inShiftCount = isFiltered
-    ? Math.max(0, presentCount - 2)
-    : base.inShift;
-
-  const periodLabels: Record<"dia" | "semana" | "mes", string> = {
-    dia: "Resumo do dia (Hoje)",
-    semana: "Resumo da semana",
-    mes: "Resumo do mês (Outubro/2026)",
-  };
+  const analytics = computeDashboardAnalytics(
+    filteredEmployees,
+    occs,
+    recs,
+    period,
+  );
 
   return (
     <div className="overview-admin-page">
-      {/* Cabeçalho simples e barra de período/filtros compacta */}
+      {/* A. Cabeçalho e atalhos rápidos */}
       <div className="overview-top-bar">
         <div className="overview-title-block">
-          <h1>Visão operacional</h1>
+          <h1>Visão operacional e indicadores</h1>
+          <p className="sub">
+            Central de resultados, análise gráfica e modelos de relatórios da
+            gestão de jornada
+          </p>
         </div>
 
         <div className="overview-top-actions">
@@ -137,19 +134,44 @@ export default function Overview() {
               <option value="Remoto">Remoto</option>
             </select>
           </div>
+
+          {(deptFilter || modeFilter) && (
+            <button
+              type="button"
+              className="btn admin-row-btn"
+              onClick={() => {
+                setDeptFilter("");
+                setModeFilter("");
+              }}
+            >
+              Limpar filtros
+            </button>
+          )}
         </div>
       </div>
 
-      {/* C. Resumo do dia (única área organizada, sem cartões coloridos soltos) */}
-      <KpiCards
-        presentCount={presentCount}
-        activeCount={activeCount}
-        inShiftCount={inShiftCount}
-        openOccsCount={openOccs.length}
-        periodLabel={periodLabels[period]}
+      {/* C. Indicadores principais (Frequência, Horas, Ocorrências, Modalidades) */}
+      <KpiCards analytics={analytics} />
+
+      {/* D. Gráficos analíticos (Frequência, Horas trabalhadas, Ocorrências por tipo e Modalidades) */}
+      <PainelGraficosAnaliticos analytics={analytics} go={go} />
+
+      {/* E. Resultados e Discussão (Interpretação objetiva dos dados do período) */}
+      <ResumoDiscussaoPeriodo analytics={analytics} />
+
+      {/* F. Modelos de Relatórios disponíveis com filtros e exportação CSV */}
+      <SecaoRelatoriosDisponiveis
+        employees={employees}
+        occs={occs}
+        recs={recs}
+        initialPeriod={period}
+        initialDept={deptFilter}
+        initialMode={modeFilter}
+        role={role}
+        notify={notify}
       />
 
-      {/* D. Situação dos funcionários (tabela administrativa principal) */}
+      {/* G. Situação dos funcionários (tabela administrativa nominal preservada) */}
       <LiveTeamSidebar
         employees={filteredEmployees}
         recs={recs}
@@ -157,7 +179,7 @@ export default function Overview() {
         go={go}
       />
 
-      {/* E. Pendências de ponto (listagem organizada para o RH) */}
+      {/* H. Pendências de ponto (listagem organizada para o RH preservada) */}
       <RhPrioritiesTable openOccs={openOccs} go={go} />
     </div>
   );
