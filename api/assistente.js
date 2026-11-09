@@ -133,8 +133,12 @@ Retorne APENAS um objeto JSON válido com exatamente estas propriedades:
     };
 
     // 1. Tenta direto os modelos mais rápidos (sem gastar tempo listando antes)
+    const configuredModel = process.env.GEMINI_MODEL || "gemini-3.8-flash";
     const fastCandidates = [
-      { model: process.env.GEMINI_MODEL || "gemini-3.8-flash", disableThinking: false },
+      { model: configuredModel, disableThinking: true },
+      ...(configuredModel === "gemini-flash-latest"
+        ? []
+        : [{ model: "gemini-flash-latest", disableThinking: true }]),
     ];
 
     const errors = [];
