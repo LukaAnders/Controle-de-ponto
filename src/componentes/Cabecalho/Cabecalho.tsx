@@ -11,7 +11,8 @@ const roleNavLabels: Record<Role, string> = {
 };
 
 export default function Header() {
-  const { role, setRole, go, occs, employees } = useApp();
+  const { role, setRole, go, occs, employees, sidebarCollapsed, toggleSidebar } =
+    useApp();
   const [showNotif, setShowNotif] = useState(false);
 
   const openOccs = occs.filter(
@@ -24,16 +25,51 @@ export default function Header() {
 
   return (
     <header className="top-header">
-      <div
-        className="header-brand"
-        onClick={() => go(roles[role].pages[0])}
-        title="PontoNexo — Controle de Ponto"
-      >
-        <img
-          src={`${import.meta.env.BASE_URL}logo-pontonexo.png`}
-          alt="PontoNexo"
-          className="header-brand-img"
-        />
+      <div className="header-left">
+        <button
+          type="button"
+          className="header-menu-btn"
+          onClick={toggleSidebar}
+          aria-label={
+            sidebarCollapsed
+              ? "Expandir menu lateral"
+              : "Ocultar menu lateral"
+          }
+          aria-expanded={!sidebarCollapsed}
+          title={
+            sidebarCollapsed
+              ? "Expandir menu lateral"
+              : "Ocultar menu lateral"
+          }
+        >
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
+        </button>
+
+        <div
+          className="header-brand"
+          onClick={() => go(roles[role].pages[0])}
+          title="PontoNexo — Controle de Ponto"
+        >
+          <img
+            src={`${import.meta.env.BASE_URL}logo-pontonexo.png`}
+            alt="PontoNexo"
+            className="header-brand-img"
+          />
+        </div>
       </div>
 
       <nav

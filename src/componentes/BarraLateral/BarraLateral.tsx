@@ -48,7 +48,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ onOpenPrivacy }: SidebarProps) {
-  const { role, page, go, occs, sidebarCollapsed, toggleSidebar } = useApp();
+  const { role, page, go, occs, sidebarCollapsed } = useApp();
 
   const openOccsCount = occs.filter(
     (o) => o.status === "Pendente" || o.status === "Em análise",
@@ -61,23 +61,21 @@ export default function Sidebar({ onOpenPrivacy }: SidebarProps) {
     <aside
       className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}
       aria-label="Menu lateral"
+      aria-hidden={sidebarCollapsed}
     >
       <nav aria-label="Navegação principal" className="sidebar-nav">
-        {!sidebarCollapsed && (
-          <div className="nav-section-label">OPERAÇÃO E JORNADA</div>
-        )}
+        <div className="nav-section-label">OPERAÇÃO E JORNADA</div>
         {mainPages.map((p) => (
           <button
             key={p}
             type="button"
-            title={sidebarCollapsed ? pageNames[p] : undefined}
             className={`nav-btn ${p === page ? "active" : ""}`}
             aria-current={p === page ? "page" : undefined}
             onClick={() => go(p)}
           >
             <span className="nav-btn-left">
               {pageIcons[p]}
-              {!sidebarCollapsed && <span>{pageNames[p]}</span>}
+              <span>{pageNames[p]}</span>
             </span>
             {p === "occurrences" && openOccsCount > 0 && (
               <span
@@ -93,28 +91,24 @@ export default function Sidebar({ onOpenPrivacy }: SidebarProps) {
         {hasAssistant && (
           <>
             <div className="nav-divider" />
-            {!sidebarCollapsed && (
-              <div className="nav-section-label">INTELIGÊNCIA E GOVERNANÇA</div>
-            )}
+            <div className="nav-section-label">INTELIGÊNCIA E GOVERNANÇA</div>
             <button
               type="button"
-              title={sidebarCollapsed ? pageNames.assistant : undefined}
               className={`nav-btn ${page === "assistant" ? "active" : ""}`}
               aria-current={page === "assistant" ? "page" : undefined}
               onClick={() => go("assistant")}
             >
               <span className="nav-btn-left">
                 {pageIcons.assistant}
-                {!sidebarCollapsed && <span>{pageNames.assistant}</span>}
+                <span>{pageNames.assistant}</span>
               </span>
-              {!sidebarCollapsed && <span className="nav-tag">IA</span>}
+              <span className="nav-tag">IA</span>
             </button>
           </>
         )}
 
         <button
           type="button"
-          title={sidebarCollapsed ? "Privacidade e LGPD" : undefined}
           className="nav-btn nav-btn-secondary"
           onClick={onOpenPrivacy}
         >
@@ -122,7 +116,7 @@ export default function Sidebar({ onOpenPrivacy }: SidebarProps) {
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
-            {!sidebarCollapsed && <span>Privacidade e LGPD</span>}
+            <span>Privacidade e LGPD</span>
           </span>
         </button>
       </nav>
@@ -132,44 +126,11 @@ export default function Sidebar({ onOpenPrivacy }: SidebarProps) {
           {roles[role].avatar}
           <span className="who-online-dot" />
         </div>
-        {!sidebarCollapsed && (
-          <div className="who-info">
-            <strong>{roles[role].user}</strong>
-            <small>{roles[role].shortLabel}</small>
-          </div>
-        )}
+        <div className="who-info">
+          <strong>{roles[role].user}</strong>
+          <small>{roles[role].shortLabel}</small>
+        </div>
       </div>
-
-      <button
-        type="button"
-        className="collapse-footer-btn"
-        onClick={toggleSidebar}
-        aria-label={
-          sidebarCollapsed
-            ? "Expandir barra lateral"
-            : "Recolher barra lateral"
-        }
-        title={
-          sidebarCollapsed
-            ? "Expandir menu lateral"
-            : "Recolher menu lateral"
-        }
-      >
-        {sidebarCollapsed ? (
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="13 17 18 12 13 7" />
-            <polyline points="6 17 11 12 6 7" />
-          </svg>
-        ) : (
-          <>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="11 17 6 12 11 7" />
-              <polyline points="18 17 13 12 18 7" />
-            </svg>
-            <span>Recolher menu</span>
-          </>
-        )}
-      </button>
     </aside>
   );
 }
