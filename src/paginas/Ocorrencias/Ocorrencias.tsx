@@ -1,0 +1,117 @@
+import { useState, useEffect } from "react";
+import { useApp, SELF } from "../../contexto/ContextoApp";
+import OccurrenceFilters from "./componentes/FiltrosOcorrencia";
+import OccurrenceTable from "./componentes/TabelaOcorrencias";
+import OccurrenceDetailPanel from "./componentes/PainelDetalheOcorrencia";
+import NewOccurrenceModal from "./componentes/ModalNovaOcorrencia";
+import "./Ocorrencias.css";
+
+export default function Occurrences() {
+  const { occs, employees, query, actOcc, addOcc, role } = useApp();
+  const [st, setSt] = useState(query.open ? "abertas" : "");
+  const [ty, setTy] = useState(query.type || "");
+  const [deptFilter, setDeptFilter] = useState("");
+  const [prioFilter, setPrioFilter] = useState("");
+  const [search, setSearch] = useState("");
+  const [sel, setSel] = useState(query.sel || "");
+  const [showNewModal, setShowNewModal] = useState(false);
+
+  useEffect(() => {
+    if (query.type !== undefined) setTy(query.type);
+    if (query.open) setSt("abertas");
+    if (query.sel) setSel(query.sel);
+  }, [query]);
+
+  const getEmp = (id: string) => employees.find((e) => e.id === id);
+
+  const list = occs.filter((o) => {
+    const emp = getEmp(o.empId);
+    const matchStatus =
+      !st ||
+      (st === "abertas"
+        ? o.status === "Pendente" || o.status === "Em análise"
+        : o.status === st);
+    const matchType = !ty || o.type === ty;
+    const matchDept = !deptFilter || emp?.dept === deptFilter;
+    const matchPrio = !prioFilter || o.priority === prioFilter;
+    const matchSearch =
+      !search ||
+      (emp?.name + " " + o.summary + " " + o.justification)
+        .toLowerCase()
+        .includes(search.toLowerCase());
+
+    return matchStatus && matchType && matchDept && matchPrio && matchSearch;
+  });
+
+  const selectedOcc = occs.find((x) => x.id === sel) || null;
+  const selectedEmp = selectedOcc ? getEmp(selectedOcc.empId) : undefined;
+
+  return (
+    <div className="page-stack">
+      <div className="page-header">
+        <div>
+          <h1>Ocorrências e justificativas</h1>
+          <p className="sub">
+            {role === "funcionario"
+              ? "Acompanhe suas solicitações de jornada e envie justificativas para o RH."
+              : "Analise inconsistências de ponto, justificativas de ausência e pedidos de home office."}
+          </p>
+        </div>
+        <button
+          type="button"
+          className="btn primary"
+          onClick={() => setShowNewModal(true)}
+        >
+          + Nova justificativa
+        </button>
+      </div>
+
+      <OccurrenceFilters
+        search={search}
+        setSearch={setSearch}
+        st={st}
+        setSt={setSt}
+        ty={ty}
+        setTy={setTy}
+        deptFilter={deptFilter}
+        setDeptFilter={setDeptFilter}
+        prioFilter={prioFilter}
+        setPrioFilter={setPrioFilter}
+        role={role}
+        onClear={() => {
+          setSt("");
+          setTy("");
+          setDeptFilter("");
+          setPrioFilter("");
+          setSearch("");
+        }}
+      />
+
+      <div className="split">
+        <OccurrenceTable
+          list={list}
+          employees={employees}
+          selectedId={selectedOcc?.id}
+          onSelect={setSel}
+        />
+
+        {selectedOcc && (
+          <OccurrenceDetailPanel
+            occurrence={selectedOcc}
+            employee={selectedEmp}
+            role={role}
+            onClose={() => setSel("")}
+            actOcc={actOcc}
+          />
+        )}
+      </div>
+
+      <NewOccurrenceModal
+        open={showNewModal}
+        targetEmpId={role === "funcionario" ? SELF : employees[0]?.id || SELF}
+        onClose={() => setShowNewModal(false)}
+        addOcc={addOcc}
+      />
+    </div>
+  );
+}
