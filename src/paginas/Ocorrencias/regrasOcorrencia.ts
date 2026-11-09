@@ -1,15 +1,17 @@
-import { OccStatus, Role } from "../../tipos";
+import {
+  Occ,
+  OccStatus,
+  OccurrenceResponsibility,
+  Role,
+  ResponsibilityStage,
+} from "../../tipos";
 
 /**
  * A responsabilidade é mantida separada do status da ocorrência.
  * "supervisao-administrativa" descreve uma capacidade futura de supervisão;
  * não é um novo perfil existente no sistema.
  */
-export type ResponsibilityStage =
-  | "colaborador"
-  | "gestor"
-  | "rh"
-  | "supervisao-administrativa";
+export type { ResponsibilityStage } from "../../tipos";
 
 export type OccurrenceAction =
   | "aprovar"
@@ -102,6 +104,63 @@ export function workflowStateFromStatus(status: OccStatus): WorkflowState {
 
 export function initialResponsibility(): ResponsibilityStage {
   return "gestor";
+}
+
+const responsibilityStages: readonly ResponsibilityStage[] = [
+  "colaborador",
+  "gestor",
+  "rh",
+  "supervisao-administrativa",
+];
+
+function isResponsibilityStage(value: unknown): value is ResponsibilityStage {
+  return (
+    typeof value === "string" &&
+    responsibilityStages.includes(value as ResponsibilityStage)
+  );
+}
+
+function isValidResponsibility(
+  value: unknown,
+): value is OccurrenceResponsibility {
+  if (!value || typeof value !== "object") return false;
+
+  const responsibility = value as Partial<OccurrenceResponsibility>;
+  return (
+    isResponsibilityStage(responsibility.current) &&
+    (responsibility.next === undefined ||
+      isResponsibilityStage(responsibility.next))
+  );
+}
+
+function fallbackResponsibility(
+  status: OccStatus,
+): OccurrenceResponsibility | undefined {
+  switch (status) {
+    case "Pendente":
+      return { current: "gestor", next: "rh" };
+    case "Em análise":
+      return { current: "gestor" };
+    case "Encaminhada para revisão":
+      return { current: "rh" };
+    case "Aprovada":
+    case "Rejeitada":
+      return undefined;
+  }
+}
+
+/**
+ * ObtÃ©m a responsabilidade efetiva sem alterar ou persistir a ocorrÃªncia.
+ * Dados antigos usam um fallback explÃ­cito baseado apenas no status.
+ */
+export function effectiveResponsibility(
+  occurrence: Occ,
+): OccurrenceResponsibility | undefined {
+  if (isTerminalStatus(occurrence.status)) return undefined;
+  if (isValidResponsibility(occurrence.responsibility)) {
+    return occurrence.responsibility;
+  }
+  return fallbackResponsibility(occurrence.status);
 }
 
 function actionPermission(action: OccurrenceAction): OccurrencePermission {

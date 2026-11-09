@@ -39,6 +39,17 @@ export type OccStatus =
 
 export type Priority = "Alta" | "Média" | "Baixa";
 
+export type ResponsibilityStage =
+  | "colaborador"
+  | "gestor"
+  | "rh"
+  | "supervisao-administrativa";
+
+export interface OccurrenceResponsibility {
+  current: ResponsibilityStage;
+  next?: ResponsibilityStage;
+}
+
 export interface AuditEntry {
   action: string;
   by: string;
@@ -59,6 +70,7 @@ export interface Occ {
   notes: string;
   status: OccStatus;
   priority: Priority;
+  responsibility?: OccurrenceResponsibility;
   aiAnalysis: {
     problemSummary: string;
     toVerify: string;
