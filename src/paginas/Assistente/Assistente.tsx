@@ -236,7 +236,7 @@ export default function Assistant() {
 
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 9000);
+      const timeoutId = setTimeout(() => controller.abort(), 25000);
 
       try {
         const apiRes = await fetch("/api/assistente", {
@@ -285,9 +285,9 @@ export default function Assistant() {
       } finally {
         clearTimeout(timeoutId);
       }
-    } catch {
-      // Usa o fallback local caso esteja rodando sem o endpoint serverless ou dÃª timeout
-    }
+      apiErrorNote = "A API não respondeu a tempo ou está indisponível.";
+      apiErrorNote = "A API não respondeu a tempo ou está indisponível.";
+      apiErrorNote = "A API não respondeu a tempo ou está indisponível.";
 
     try {
       if (!resp) {
@@ -306,6 +306,17 @@ export default function Assistant() {
           id: "m" + Date.now() + Math.random(),
           question: trimmed,
           response: finalResp,
+        },
+        ...prev,
+      ]);
+    } catch (error) {
+      console.error("Erro ao finalizar resposta do assistente:", error);
+      const fallback = buildResponse(trimmed);
+      saveHistory((prev) => [
+        {
+          id: "m" + Date.now() + Math.random(),
+          question: trimmed,
+          response: fallback,
         },
         ...prev,
       ]);
