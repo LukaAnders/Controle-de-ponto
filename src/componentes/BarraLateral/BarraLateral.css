@@ -1,4 +1,7 @@
 .sidebar {
+  --navy: #173d5b;
+  --navy-light: #214f70;
+  --navy-border: #2b5a7a;
   width: 264px;
   flex-shrink: 0;
   background: var(--navy);
@@ -35,7 +38,7 @@
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: #64748b;
+  color: #a5bed0;
   padding: 10px 12px 4px;
   white-space: nowrap;
 }
@@ -50,7 +53,7 @@
   position: relative;
   background: transparent;
   border: 1px solid transparent;
-  color: #cbd5e1;
+  color: #d8e6f0;
   text-align: left;
   padding: 10px 12px;
   border-radius: 8px;
@@ -79,8 +82,8 @@
 }
 
 .nav-btn.active {
-  background: rgba(37, 99, 235, 0.22);
-  border-color: rgba(59, 130, 246, 0.35);
+  background: rgba(56, 189, 248, 0.14);
+  border-color: rgba(125, 211, 252, 0.32);
   color: #ffffff;
   font-weight: 600;
 }
@@ -93,7 +96,7 @@
   bottom: 7px;
   width: 4px;
   border-radius: 0 4px 4px 0;
-  background: #3b82f6;
+  background: #38bdf8;
 }
 
 .nav-btn-secondary {

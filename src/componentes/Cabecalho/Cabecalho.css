@@ -1,5 +1,8 @@
 /* Header seguindo o mesmo padrão visual da Sidebar (--navy, --navy-light, --navy-border) */
 .top-header {
+  --navy: #f8fafc;
+  --navy-light: #edf3f8;
+  --navy-border: #dce5ee;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -7,7 +10,7 @@
   padding: 0 24px 0 16px;
   height: 64px;
   background: var(--navy);
-  color: #ffffff;
+  color: #1f3855;
   border-bottom: 1px solid var(--navy-border);
   position: sticky;
   top: 0;
@@ -31,19 +34,20 @@
   background: transparent;
   border: 1px solid transparent;
   border-radius: 6px;
-  color: #cbd5e1;
+  color: #42566e;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .header-menu-btn:hover {
   background: var(--navy-light);
-  color: #ffffff;
+  color: #173b66;
 }
 
 .header-brand {
   display: flex;
   align-items: center;
+  gap: 9px;
   height: 48px;
   cursor: pointer;
   padding: 4px 6px;
@@ -56,11 +60,31 @@
 }
 
 .header-brand-img {
-  height: 38px;
-  width: auto;
-  max-width: 190px;
+  height: 36px;
+  width: 36px;
   object-fit: contain;
   display: block;
+}
+
+.header-brand-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.05;
+}
+
+.header-brand-copy strong {
+  color: #173b66;
+  font-size: 16px;
+  font-weight: 750;
+  letter-spacing: -.035em;
+}
+
+.header-brand-copy small {
+  color: #647a92;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .045em;
 }
 
 .header-navbar {
@@ -73,7 +97,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  background: rgba(15, 23, 42, 0.3);
+  background: #f1f5f9;
   border: 1px solid var(--navy-border);
   padding: 3px;
   border-radius: 8px;
@@ -89,7 +113,7 @@
   position: relative;
   background: transparent;
   border: 1px solid transparent;
-  color: #cbd5e1;
+  color: #42566e;
   padding: 7px 13px;
   border-radius: 6px;
   cursor: pointer;
@@ -105,18 +129,18 @@
 
 .header-nav-btn:hover {
   background: var(--navy-light);
-  color: #ffffff;
+  color: #173b66;
 }
 
 .header-nav-btn.active {
-  background: rgba(37, 99, 235, 0.25);
-  border-color: rgba(59, 130, 246, 0.45);
-  color: #ffffff;
+  background: #e6f0ff;
+  border-color: #bfd4f4;
+  color: #174b91;
   font-weight: 600;
 }
 
 .header-notif-btn {
-  background: rgba(15, 23, 42, 0.3);
+  background: #f1f5f9;
   border-color: var(--navy-border);
   padding: 7px 12px;
 }
@@ -224,7 +248,15 @@
   }
 
   .header-brand-img {
-    height: 32px;
-    max-width: 140px;
+    height: 31px;
+    width: 31px;
+  }
+
+  .header-brand-copy strong {
+    font-size: 14px;
+  }
+
+  .header-brand-copy small {
+    font-size: 8px;
   }
 }

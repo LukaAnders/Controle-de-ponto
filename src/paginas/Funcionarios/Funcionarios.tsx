@@ -47,6 +47,14 @@ export default function Employees() {
   );
 
   const selectedEmp = employees.find((e) => e.id === detailId) || null;
+  const activeEmployees = list.filter((e) => e.active);
+  const remoteEmployees = activeEmployees.filter(
+    (e) => e.mode === "Remoto" || (e.mode === "Híbrido" && e.remote.allowed),
+  );
+  const pendingRemote = activeEmployees.filter(
+    (e) =>
+      (e.mode === "Remoto" || e.mode === "Híbrido") && !e.remote.allowed,
+  );
   const empRecs = selectedEmp
     ? recs.filter((r) => r.empId === selectedEmp.id)
     : [];
@@ -163,6 +171,36 @@ export default function Employees() {
           setM("");
         }}
       />
+
+      <section className="employee-overview" aria-label="Resumo da equipe">
+        <div className="employee-overview-copy">
+          <span className="eyebrow">VISÃO DA EQUIPE</span>
+          <strong>
+            {viewMode === "schedule"
+              ? "Cobertura prevista para a semana"
+              : "Panorama dos colaboradores filtrados"}
+          </strong>
+          <span>Os indicadores acompanham os filtros aplicados acima.</span>
+        </div>
+        <div className="employee-metrics">
+          <div className="employee-metric">
+            <span>Colaboradores</span>
+            <strong>{list.length}</strong>
+          </div>
+          <div className="employee-metric success">
+            <span>Ativos</span>
+            <strong>{activeEmployees.length}</strong>
+          </div>
+          <div className="employee-metric info">
+            <span>Home office</span>
+            <strong>{remoteEmployees.length}</strong>
+          </div>
+          <div className="employee-metric warning">
+            <span>Revisar permissão</span>
+            <strong>{pendingRemote.length}</strong>
+          </div>
+        </div>
+      </section>
 
       <div className="split">
         {viewMode === "table" ? (

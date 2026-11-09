@@ -28,92 +28,117 @@ export default function EmployeeScheduleGrid({
       .join("");
 
   return (
-    <div className="card scroll">
-      <table className="schedule-grid-table">
-        <thead>
-          <tr>
-            <th style={{ minWidth: 200 }}>Colaborador</th>
-            {weekDays.map((w) => (
-              <th key={w.day}>
-                <div className="day-col-header">
-                  <strong>{w.day}</strong>
-                  <small>{w.date}</small>
-                </div>
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {list.map((e, idx) => {
-            const isRemoteValid = e.remote.allowed && e.remote.until >= TODAY;
-            const times =
-              e.schedule.split(" ")[0] + " - " + e.schedule.split(" ")[2];
+    <section className="schedule-card" aria-label="Escala semanal da equipe">
+      <div className="schedule-card-header">
+        <div>
+          <span className="eyebrow">ESCALA SEMANAL</span>
+          <h2>26 a 30 de outubro</h2>
+          <p>Distribuição presencial e remota da equipe.</p>
+        </div>
+        <div className="schedule-legend" aria-label="Legenda da escala">
+          <span><i className="legend-dot presencial" />Presencial</span>
+          <span><i className="legend-dot remoto" />Home office</span>
+          <span><i className="legend-dot alerta" />Revisar</span>
+        </div>
+      </div>
 
-            return (
-              <tr
-                key={e.id}
-                className={detailId === e.id ? "selected-row" : ""}
-                style={{ cursor: "pointer" }}
-                onClick={() =>
-                  onSelectDetail(detailId === e.id ? "" : e.id)
-                }
-              >
-                <td>
-                  <div className="emp-cell">
-                    <div className={`emp-avatar alt-${idx % 4}`}>
-                      {getInitials(e.name)}
-                    </div>
-                    <div>
-                      <strong>{e.name}</strong>
-                      <div className="cell-sub">
-                        {e.dept} · {e.mode}
+      <div className="schedule-period">
+        <span>SEMANA ATUAL</span>
+        <strong>26 — 30 OUT 2026</strong>
+      </div>
+
+      <div className="scroll schedule-scroll">
+        <table className="schedule-grid-table">
+          <thead>
+            <tr>
+              <th className="schedule-employee-heading" style={{ minWidth: 230 }}>
+                Colaborador
+              </th>
+              {weekDays.map((w, dayIdx) => (
+                <th key={w.day} className={dayIdx === 0 ? "current-day" : ""}>
+                  <div className="day-col-header">
+                    <strong>{w.day}</strong>
+                    <small>{w.date}</small>
+                  </div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {list.map((e, idx) => {
+              const isRemoteValid = e.remote.allowed && e.remote.until >= TODAY;
+              const times =
+                e.schedule.split(" ")[0] + " - " + e.schedule.split(" ")[2];
+
+              return (
+                <tr
+                  key={e.id}
+                  className={detailId === e.id ? "selected-row" : ""}
+                  style={{ cursor: "pointer" }}
+                  onClick={() => onSelectDetail(detailId === e.id ? "" : e.id)}
+                >
+                  <td>
+                    <div className="emp-cell">
+                      <div className={`emp-avatar alt-${idx % 4}`}>
+                        {getInitials(e.name)}
+                      </div>
+                      <div>
+                        <strong>{e.name}</strong>
+                        <div className="cell-sub">
+                          {e.dept} · {e.mode}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </td>
+                  </td>
 
-                {weekDays.map((w, dayIdx) => {
-                  if (!e.active) {
+                  {weekDays.map((w, dayIdx) => {
+                    if (!e.active) {
+                      return (
+                        <td key={w.day} className={dayIdx === 0 ? "current-day" : ""}>
+                          <div className="shift-pill inativo">
+                            Inativo
+                            <small>Sem turno</small>
+                          </div>
+                        </td>
+                      );
+                    }
+
+                    const isRemoteDay =
+                      e.mode === "Remoto" ||
+                      (e.mode === "Híbrido" && (dayIdx === 0 || dayIdx === 4));
+                    const pillClass = isRemoteDay
+                      ? isRemoteValid
+                        ? "remoto"
+                        : "alerta"
+                      : "presencial";
+                    const modeLabel = isRemoteDay
+                      ? isRemoteValid
+                        ? "Home Office"
+                        : "Sem permissão"
+                      : "Presencial";
+
                     return (
-                      <td key={w.day}>
-                        <div className="shift-pill inativo">
-                          Inativo
-                          <small>Sem turno</small>
+                      <td key={w.day} className={dayIdx === 0 ? "current-day" : ""}>
+                        <div className={`shift-pill ${pillClass}`}>
+                          {times || "08:00 - 17:00"}
+                          <small>{modeLabel}</small>
                         </div>
                       </td>
                     );
-                  }
-
-                  const isRemoteDay =
-                    e.mode === "Remoto" ||
-                    (e.mode === "Híbrido" && (dayIdx === 0 || dayIdx === 4));
-
-                  const pillClass = isRemoteDay
-                    ? isRemoteValid
-                      ? "remoto"
-                      : "alerta"
-                    : "presencial";
-
-                  const modeLabel = isRemoteDay
-                    ? isRemoteValid
-                      ? "Home Office"
-                      : "Sem permissão"
-                    : "Presencial";
-
-                  return (
-                    <td key={w.day}>
-                      <div className={`shift-pill ${pillClass}`}>
-                        {times || "08:00 - 17:00"}
-                        <small>{modeLabel}</small>
-                      </div>
-                    </td>
-                  );
-                })}
+                  })}
+                </tr>
+              );
+            })}
+            {!list.length && (
+              <tr>
+                <td colSpan={6} className="empty-cell">
+                  Nenhum colaborador encontrado para montar esta escala.
+                </td>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }

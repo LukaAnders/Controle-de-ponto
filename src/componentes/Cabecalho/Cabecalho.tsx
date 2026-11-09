@@ -65,10 +65,14 @@ export default function Header() {
           title="PontoNexo — Controle de Ponto"
         >
           <img
-            src={`${import.meta.env.BASE_URL}logo-pontonexo.png`}
-            alt="PontoNexo"
+            src={`${import.meta.env.BASE_URL}logo-icon.png`}
+            alt=""
             className="header-brand-img"
           />
+          <span className="header-brand-copy">
+            <strong>PontoN</strong>
+            <small>Gestão de Jornada</small>
+          </span>
         </div>
       </div>
 
