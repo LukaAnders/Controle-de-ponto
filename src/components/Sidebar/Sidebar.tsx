@@ -62,30 +62,6 @@ export default function Sidebar({ onOpenPrivacy }: SidebarProps) {
       className={`sidebar ${sidebarCollapsed ? "collapsed" : ""}`}
       aria-label="Menu lateral"
     >
-      <div
-        className="brand"
-        onClick={() => go(roles[role].pages[0])}
-        title="PontoNexo — Gestão de Jornada - SaaS"
-      >
-        {sidebarCollapsed ? (
-          <div className="brand-Collapsed-box">
-            <img
-              src={`${import.meta.env.BASE_URL}logo-icon.png`}
-              alt="PontoNexo"
-              className="brand-icon-img"
-            />
-          </div>
-        ) : (
-          <div className="brand-full-box">
-            <img
-              src={`${import.meta.env.BASE_URL}logo-pontonexo.png`}
-              alt="PontoNexo — Gestão de Jornada - SaaS"
-              className="brand-full-img"
-            />
-          </div>
-        )}
-      </div>
-
       <nav aria-label="Navegação principal" className="sidebar-nav">
         {!sidebarCollapsed && (
           <div className="nav-section-label">OPERAÇÃO E JORNADA</div>

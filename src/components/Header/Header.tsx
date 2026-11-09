@@ -4,16 +4,14 @@ import { typeLabel } from "../../data/mockData";
 import { Role } from "../../types";
 import "./Header.css";
 
+const roleNavLabels: Record<Role, string> = {
+  rh: "RH",
+  gestor: "Gestor",
+  funcionario: "Funcionário",
+};
+
 export default function Header() {
-  const {
-    role,
-    setRole,
-    go,
-    occs,
-    employees,
-    sidebarCollapsed,
-    toggleSidebar,
-  } = useApp();
+  const { role, setRole, go, occs, employees } = useApp();
   const [showNotif, setShowNotif] = useState(false);
 
   const openOccs = occs.filter(
@@ -26,72 +24,70 @@ export default function Header() {
 
   return (
     <header className="top-header">
-      <div className="header-left">
-        <button
-          type="button"
-          className="sidebar-toggle-btn"
-          onClick={toggleSidebar}
-          aria-label={
-            sidebarCollapsed ? "Mostrar barra lateral" : "Ocultar barra lateral"
-          }
-          title={
-            sidebarCollapsed
-              ? "Expandir barra lateral"
-              : "Recolher barra lateral"
-          }
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <line x1="9" y1="3" x2="9" y2="21" />
-          </svg>
-        </button>
-
-        <span className="header-date-context">
-          Segunda-feira, 26 de outubro de 2026
-        </span>
-        <span
-          className="demo-pill"
-          title="Todos os dados e equipamentos são simulados localmente"
-        >
-          Ambiente Demonstrativo
-        </span>
+      <div
+        className="header-brand"
+        onClick={() => go(roles[role].pages[0])}
+        title="PontoNexo — Controle de Ponto"
+      >
+        <img
+          src={`${import.meta.env.BASE_URL}logo-pontonexo.png`}
+          alt="PontoNexo"
+          className="header-brand-img"
+        />
       </div>
 
-      <div className="header-right">
+      <nav
+        className="header-navbar"
+        aria-label="Navegação de perfil e notificações"
+      >
         <div
-          className="role-segmented-control"
+          className="header-role-nav"
           role="group"
-          aria-label="Alternar perfil demonstrativo"
+          aria-label="Alternar perfil de acesso"
         >
           {(Object.keys(roles) as Role[]).map((r) => (
             <button
               key={r}
               type="button"
-              className={`segment-btn ${role === r ? "active" : ""}`}
+              className={`header-nav-btn ${role === r ? "active" : ""}`}
               onClick={() => {
                 setShowNotif(false);
                 setRole(r);
               }}
-              title={`Simular visão: ${roles[r].label}`}
+              title={`Alternar para: ${roles[r].label}`}
             >
-              {roles[r].segmentLabel}
+              <span>{roleNavLabels[r]}</span>
             </button>
           ))}
         </div>
 
+        <div className="header-nav-divider" aria-hidden="true" />
+
         <div className="notif-wrapper">
           <button
             type="button"
-            className="icon-btn"
-            aria-label={`Notificações demonstrativas (${openOccs.length} pendentes)`}
+            className={`header-nav-btn header-notif-btn ${showNotif ? "active" : ""}`}
+            aria-label={`Notificações (${openOccs.length} pendentes)`}
+            title="Notificações de pendências"
             onClick={() => setShowNotif((v) => !v)}
           >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
+            <span className="header-notif-label">Notificações</span>
             {openOccs.length > 0 && (
-              <span className="notif-dot">{openOccs.length}</span>
+              <span className="header-nav-counter">{openOccs.length}</span>
             )}
           </button>
 
@@ -145,7 +141,7 @@ export default function Header() {
             </div>
           )}
         </div>
-      </div>
+      </nav>
     </header>
   );
 }

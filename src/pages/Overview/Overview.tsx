@@ -3,7 +3,6 @@ import { useApp } from "../../context/AppContext";
 import { base, depts } from "../../data/mockData";
 import KpiCards from "./components/KpiCards";
 import RhPrioritiesTable from "./components/RhPrioritiesTable";
-import ModalityDistribution from "./components/ModalityDistribution";
 import LiveTeamSidebar from "./components/LiveTeamSidebar";
 import "./Overview.css";
 
@@ -39,10 +38,40 @@ export default function Overview() {
     ? Math.max(0, presentCount - 2)
     : base.inShift;
 
+  const periodLabels: Record<"dia" | "semana" | "mes", string> = {
+    dia: "Resumo do dia (Hoje)",
+    semana: "Resumo da semana",
+    mes: "Resumo do mês (Outubro/2026)",
+  };
+
   return (
-    <div className="page-stack">
-      {/* Sub-header Bar with Day/Week/Month tabs and quick filters (inspired by Image 1) */}
-      <div className="overview-subbar">
+    <div className="overview-admin-page">
+      {/* Cabeçalho simples e barra de período/filtros compacta */}
+      <div className="overview-top-bar">
+        <div className="overview-title-block">
+          <h1>Visão operacional</h1>
+          <p className="sub">
+            Segunda-feira, 26 de outubro de 2026 · Controle diário de frequência
+            e ocorrências
+          </p>
+        </div>
+
+        <div className="overview-top-actions">
+          <button type="button" className="btn" onClick={() => go("punch")}>
+            Central de Ponto
+          </button>
+          <button
+            type="button"
+            className="btn primary"
+            onClick={() => go("occurrences", { open: "1" })}
+          >
+            Resolver pendências ({openOccs.length})
+          </button>
+        </div>
+      </div>
+
+      {/* B. Navegação por período e filtros administrativos */}
+      <div className="overview-control-bar">
         <div className="period-tabs" role="tablist" aria-label="Período">
           <button
             type="button"
@@ -51,7 +80,7 @@ export default function Overview() {
             className={`period-tab ${period === "dia" ? "active" : ""}`}
             onClick={() => setPeriod("dia")}
           >
-            Dia (Hoje)
+            Hoje
           </button>
           <button
             type="button"
@@ -69,85 +98,71 @@ export default function Overview() {
             className={`period-tab ${period === "mes" ? "active" : ""}`}
             onClick={() => setPeriod("mes")}
           >
-            Mês (Outubro)
+            Mês
           </button>
         </div>
 
         <div className="subbar-filters">
-          <select
-            aria-label="Filtrar por setor"
-            className="subbar-select"
-            value={deptFilter}
-            disabled={role === "gestor"}
-            onChange={(e) => setDeptFilter(e.target.value)}
-          >
-            <option value="">Todos os setores</option>
-            {depts.map((d) => (
-              <option key={d} value={d}>
-                Setor: {d}
-              </option>
-            ))}
-          </select>
+          <div className="control-filter-group">
+            <label htmlFor="overview-dept-filter" className="sr-only-label">
+              Setor:
+            </label>
+            <select
+              id="overview-dept-filter"
+              aria-label="Filtrar por setor"
+              className="subbar-select"
+              value={deptFilter}
+              disabled={role === "gestor"}
+              onChange={(e) => setDeptFilter(e.target.value)}
+            >
+              <option value="">Todos os setores</option>
+              {depts.map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </select>
+          </div>
 
-          <select
-            aria-label="Filtrar por modalidade"
-            className="subbar-select"
-            value={modeFilter}
-            onChange={(e) => setModeFilter(e.target.value)}
-          >
-            <option value="">Todas as modalidades</option>
-            <option value="Presencial">Presencial</option>
-            <option value="Híbrido">Híbrido</option>
-            <option value="Remoto">Remoto</option>
-          </select>
+          <div className="control-filter-group">
+            <label htmlFor="overview-mode-filter" className="sr-only-label">
+              Modalidade:
+            </label>
+            <select
+              id="overview-mode-filter"
+              aria-label="Filtrar por modalidade"
+              className="subbar-select"
+              value={modeFilter}
+              onChange={(e) => setModeFilter(e.target.value)}
+            >
+              <option value="">Todas as modalidades</option>
+              <option value="Presencial">Presencial</option>
+              <option value="Híbrido">Híbrido</option>
+              <option value="Remoto">Remoto</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* Page Heading */}
-      <div className="page-header">
-        <div>
-          <h1>Visão operacional</h1>
-          <p className="sub">
-            Acompanhe a jornada e resolva pendências em um só lugar ·
-            Segunda-feira, 26 de outubro (Dados demonstrativos)
-          </p>
-        </div>
+      {/* C. Resumo do dia (única área organizada, sem cartões coloridos soltos) */}
+      <KpiCards
+        presentCount={presentCount}
+        activeCount={activeCount}
+        inShiftCount={inShiftCount}
+        openOccsCount={openOccs.length}
+        periodLabel={periodLabels[period]}
+      />
 
-        <div className="page-header-actions">
-          <button type="button" className="btn" onClick={() => go("punch")}>
-            Central de Ponto
-          </button>
-          <button
-            type="button"
-            className="btn primary"
-            onClick={() => go("occurrences", { open: "1" })}
-          >
-            Resolver pendências ({openOccs.length})
-          </button>
-        </div>
-      </div>
+      {/* D. Situação dos funcionários (tabela administrativa principal) */}
+      <LiveTeamSidebar
+        employees={filteredEmployees}
+        recs={recs}
+        openOccs={openOccs}
+        go={go}
+      />
 
-      {/* 1920x1080 Widescreen 2-Column Operational Grid */}
-      <div className="overview-cockpit-grid">
-        <div className="overview-main-col">
-          <KpiCards
-            presentCount={presentCount}
-            activeCount={activeCount}
-            inShiftCount={inShiftCount}
-            openOccsCount={openOccs.length}
-          />
-
-          <RhPrioritiesTable openOccs={openOccs} go={go} />
-
-          <ModalityDistribution go={go} />
-        </div>
-
-        <LiveTeamSidebar
-          employees={filteredEmployees}
-          recs={recs}
-          go={go}
-        />
-      </div>
+      {/* E. Pendências de ponto (listagem organizada para o RH) */}
+      <RhPrioritiesTable openOccs={openOccs} go={go} />
     </div>
   );
 }

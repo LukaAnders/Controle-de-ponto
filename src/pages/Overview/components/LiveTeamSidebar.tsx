@@ -1,132 +1,318 @@
 import { useState } from "react";
-import { Employee, Page, Rec } from "../../../types";
+import { Employee, Occ, Page, Rec } from "../../../types";
 
 interface LiveTeamSidebarProps {
   employees: Employee[];
   recs: Rec[];
+  openOccs?: Occ[];
   go: (p: Page, q?: Record<string, string>) => void;
 }
+
+type EmpSituationKey = "all" | "jornada" | "intervalo" | "pendente" | "fora";
+
+interface EmpOperationalRow {
+  emp: Employee;
+  lastTime: string;
+  modalityLabel: string;
+  situationKey: Exclude<EmpSituationKey, "all">;
+  situationLabel: string;
+  statusTone: "ok" | "warn" | "bad" | "neutral";
+  hasOpenOcc: boolean;
+}
+
+const MODALITY_NAME: Record<Rec["modality"], string> = {
+  Digital: "Ponto digital",
+  Catraca: "Catraca biométrica",
+  Convencional: "Relógio convencional",
+};
+
+const DEFAULT_PUNCH_BY_EMP: Record<
+  string,
+  { time: string; modality: string; defaultSituation?: Exclude<EmpSituationKey, "all"> }
+> = {
+  e1: { time: "08:02", modality: "Ponto digital", defaultSituation: "jornada" },
+  e2: { time: "11:31", modality: "Ponto digital", defaultSituation: "jornada" },
+  e3: {
+    time: "12:04",
+    modality: "Catraca biométrica",
+    defaultSituation: "intervalo",
+  },
+  e4: {
+    time: "08:30",
+    modality: "Catraca biométrica",
+    defaultSituation: "jornada",
+  },
+  e5: {
+    time: "07:31",
+    modality: "Relógio convencional",
+    defaultSituation: "pendente",
+  },
+  e6: {
+    time: "—",
+    modality: "Relógio convencional",
+    defaultSituation: "fora",
+  },
+  e7: {
+    time: "09:00",
+    modality: "Ponto digital",
+    defaultSituation: "pendente",
+  },
+  e8: { time: "08:05", modality: "Ponto digital", defaultSituation: "jornada" },
+};
 
 export default function LiveTeamSidebar({
   employees,
   recs,
+  openOccs = [],
   go,
 }: LiveTeamSidebarProps) {
-  const [tab, setTab] = useState<"in" | "break" | "out">("in");
-  const [q, setQ] = useState("");
+  const [statusFilter, setStatusFilter] = useState<EmpSituationKey>("all");
+  const [search, setSearch] = useState("");
 
-  const activeEmps = employees.filter((e) => e.active);
-  const inShiftEmps = activeEmps.filter((_, idx) => idx % 4 !== 3);
-  const onBreakEmps = activeEmps.filter((_, idx) => idx % 4 === 3);
-  const outEmps = employees.filter((e) => !e.active);
-
-  const currentList = (
-    tab === "in" ? inShiftEmps : tab === "break" ? onBreakEmps : outEmps
-  ).filter((e) =>
-    (e.name + " " + e.dept + " " + e.role)
-      .toLowerCase()
-      .includes(q.toLowerCase()),
-  );
-
-  const getInitials = (name: string) =>
-    name
-      .split(" ")
-      .slice(0, 2)
-      .map((p) => p[0])
-      .join("");
-
-  const getLastPunch = (empId: string) => {
-    const rec = recs.find(
-      (r) => r.empId === empId && r.kind === "Registro de ponto",
+  const buildRow = (emp: Employee): EmpOperationalRow => {
+    const empPunchRecs = recs.filter(
+      (r) => r.empId === emp.id && r.kind === "Registro de ponto",
     );
-    return rec ? `${rec.time.split(" ")[1]} · ${rec.modality}` : "08:00 · Escala regular";
+    const latestRec = empPunchRecs[0];
+    const fallback = DEFAULT_PUNCH_BY_EMP[emp.id];
+
+    const empOpenOccs = openOccs.filter((o) => o.empId === emp.id);
+    const hasCriticalPending = empOpenOccs.some(
+      (o) =>
+        (o.type === "incompleto" && emp.id === "e5") ||
+        (o.type === "homeoffice" && emp.id === "e7"),
+    );
+
+    const lastTime = latestRec
+      ? latestRec.time.split(" ")[1] || latestRec.time
+      : fallback?.time || (emp.active ? "08:00" : "—");
+
+    const modalityLabel = latestRec
+      ? MODALITY_NAME[latestRec.modality]
+      : fallback?.modality ||
+        (emp.mode === "Remoto"
+          ? "Ponto digital"
+          : emp.dept === "Operações"
+            ? "Relógio convencional"
+            : "Catraca biométrica");
+
+    let situationKey: Exclude<EmpSituationKey, "all"> = "jornada";
+
+    if (!emp.active) {
+      situationKey = "fora";
+    } else if (
+      latestRec &&
+      latestRec.detail?.toLowerCase().includes("intervalo")
+    ) {
+      situationKey = "intervalo";
+    } else if (hasCriticalPending) {
+      situationKey = "pendente";
+    } else if (fallback?.defaultSituation === "intervalo") {
+      situationKey = "intervalo";
+    } else {
+      situationKey = "jornada";
+    }
+
+    const situationMap: Record<
+      Exclude<EmpSituationKey, "all">,
+      { label: string; tone: "ok" | "warn" | "bad" | "neutral" }
+    > = {
+      jornada: { label: "Em jornada", tone: "ok" },
+      intervalo: { label: "Em intervalo", tone: "warn" },
+      pendente: { label: "Com registro pendente", tone: "bad" },
+      fora: { label: "Fora da jornada", tone: "neutral" },
+    };
+
+    return {
+      emp,
+      lastTime,
+      modalityLabel,
+      situationKey,
+      situationLabel: situationMap[situationKey].label,
+      statusTone: situationMap[situationKey].tone,
+      hasOpenOcc: empOpenOccs.length > 0,
+    };
   };
 
+  const allRows = employees.map(buildRow);
+
+  const counts = {
+    all: allRows.length,
+    jornada: allRows.filter((r) => r.situationKey === "jornada").length,
+    intervalo: allRows.filter((r) => r.situationKey === "intervalo").length,
+    pendente: allRows.filter((r) => r.situationKey === "pendente").length,
+    fora: allRows.filter((r) => r.situationKey === "fora").length,
+  };
+
+  const visibleRows = allRows.filter((row) => {
+    const matchesStatus =
+      statusFilter === "all" || row.situationKey === statusFilter;
+    const queryText =
+      `${row.emp.name} ${row.emp.reg} ${row.emp.dept} ${row.modalityLabel}`.toLowerCase();
+    const matchesSearch = !search || queryText.includes(search.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
+
   return (
-    <aside
-      className="card live-team-panel"
-      aria-label="Acompanhamento de presença em tempo real"
+    <section
+      className="admin-panel"
+      aria-labelledby="employee-situation-heading"
     >
-      <div className="live-team-header">
-        <h2>Quem está em jornada</h2>
-        <p className="sub" style={{ margin: "2px 0 0" }}>
-          {employees.length} colaboradores no escopo
-        </p>
-      </div>
+      <div className="admin-section-bar">
+        <div>
+          <h2 id="employee-situation-heading" className="admin-section-title">
+            Situação dos funcionários
+          </h2>
+          <span className="admin-section-meta">
+            Acompanhamento nominal de registros e estado atual da jornada
+          </span>
+        </div>
 
-      <div className="live-team-tabs" role="tablist">
         <button
           type="button"
-          role="tab"
-          aria-selected={tab === "in"}
-          className={`live-tab ${tab === "in" ? "active" : ""}`}
-          onClick={() => setTab("in")}
+          className="admin-link-btn"
+          onClick={() => go("employees")}
         >
-          <strong>{inShiftEmps.length}</strong>
-          <span>EM JORNADA</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === "break"}
-          className={`live-tab ${tab === "break" ? "active" : ""}`}
-          onClick={() => setTab("break")}
-        >
-          <strong>{onBreakEmps.length}</strong>
-          <span>INTERVALO</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === "out"}
-          className={`live-tab ${tab === "out" ? "active" : ""}`}
-          onClick={() => setTab("out")}
-        >
-          <strong>{outEmps.length}</strong>
-          <span>FORA / INATIVO</span>
+          Cadastro completo de funcionários →
         </button>
       </div>
 
-      <input
-        className="live-search"
-        placeholder="Buscar colaborador ou setor..."
-        aria-label="Buscar colaborador na lista de presença"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-      />
-
-      <div className="live-member-list">
-        {currentList.map((emp, idx) => (
+      <div className="admin-table-toolbar">
+        <div
+          className="admin-status-filters"
+          role="tablist"
+          aria-label="Filtrar funcionários por situação"
+        >
           <button
-            key={emp.id}
             type="button"
-            className="live-member-item"
-            onClick={() => go("employees")}
-            title={`Ver cadastro de ${emp.name}`}
+            role="tab"
+            aria-selected={statusFilter === "all"}
+            className={`admin-filter-btn ${statusFilter === "all" ? "active" : ""}`}
+            onClick={() => setStatusFilter("all")}
           >
-            <div className="emp-cell">
-              <div className={`emp-avatar alt-${idx % 4}`}>
-                {getInitials(emp.name)}
-                <span className={`status-dot ${tab}`} />
-              </div>
-              <div className="live-member-info">
-                <strong>{emp.name}</strong>
-                <small>
-                  {emp.dept} · {getLastPunch(emp.id)}
-                </small>
-              </div>
-            </div>
-            <span className="badge">{emp.mode}</span>
+            Todos ({counts.all})
           </button>
-        ))}
+          <button
+            type="button"
+            role="tab"
+            aria-selected={statusFilter === "jornada"}
+            className={`admin-filter-btn ${statusFilter === "jornada" ? "active" : ""}`}
+            onClick={() => setStatusFilter("jornada")}
+          >
+            Em jornada ({counts.jornada})
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={statusFilter === "intervalo"}
+            className={`admin-filter-btn ${statusFilter === "intervalo" ? "active" : ""}`}
+            onClick={() => setStatusFilter("intervalo")}
+          >
+            Em intervalo ({counts.intervalo})
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={statusFilter === "pendente"}
+            className={`admin-filter-btn ${statusFilter === "pendente" ? "active" : ""}`}
+            onClick={() => setStatusFilter("pendente")}
+          >
+            Com pendência ({counts.pendente})
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={statusFilter === "fora"}
+            className={`admin-filter-btn ${statusFilter === "fora" ? "active" : ""}`}
+            onClick={() => setStatusFilter("fora")}
+          >
+            Fora da jornada ({counts.fora})
+          </button>
+        </div>
 
-        {currentList.length === 0 && (
-          <p className="sub" style={{ textAlign: "center", padding: "18px 0" }}>
-            Nenhum colaborador nesta categoria.
-          </p>
-        )}
+        <div className="admin-search-box">
+          <input
+            type="search"
+            className="admin-search-input"
+            placeholder="Filtrar por nome, matrícula ou setor..."
+            aria-label="Filtrar funcionários por nome, matrícula ou setor"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
       </div>
-    </aside>
+
+      <div className="scroll">
+        <table className="admin-table">
+          <thead>
+            <tr>
+              <th>Funcionário</th>
+              <th>Setor</th>
+              <th>Último registro</th>
+              <th>Modalidade de ponto</th>
+              <th>Situação atual</th>
+              <th className="col-action">Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            {visibleRows.map((row) => (
+              <tr key={row.emp.id}>
+                <td>
+                  <div className="admin-emp-name">
+                    <strong>{row.emp.name}</strong>
+                    <span>
+                      Matrícula {row.emp.reg} · {row.emp.role}
+                    </span>
+                  </div>
+                </td>
+                <td>{row.emp.dept}</td>
+                <td>
+                  <span className="admin-time-cell">{row.lastTime}</span>
+                </td>
+                <td>
+                  <div className="admin-modality-cell">
+                    <span>{row.modalityLabel}</span>
+                    <small>{row.emp.mode}</small>
+                  </div>
+                </td>
+                <td>
+                  <span className={`admin-status-tag ${row.statusTone}`}>
+                    <span className="admin-status-dot" aria-hidden="true" />
+                    {row.situationLabel}
+                  </span>
+                </td>
+                <td className="col-action">
+                  {row.situationKey === "pendente" ? (
+                    <button
+                      type="button"
+                      className="btn admin-row-btn"
+                      onClick={() => go("occurrences", { open: "1" })}
+                    >
+                      Verificar
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="btn admin-row-btn"
+                      onClick={() => go("employees")}
+                    >
+                      Consultar
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+
+            {visibleRows.length === 0 && (
+              <tr>
+                <td colSpan={6} className="empty-cell">
+                  Nenhum funcionário encontrado para os filtros selecionados.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
-

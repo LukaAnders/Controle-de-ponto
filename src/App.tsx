@@ -24,13 +24,16 @@ export default function App() {
 
   return (
     <div className="shell">
-      <Sidebar onOpenPrivacy={() => setShowPrivacyModal(true)} />
+      <Header />
 
-      <div className="main">
-        <Header />
-        <main className="page-container">
-          <CurrentPage />
-        </main>
+      <div className="shell-body">
+        <Sidebar onOpenPrivacy={() => setShowPrivacyModal(true)} />
+
+        <div className="main">
+          <main className="page-container">
+            <CurrentPage />
+          </main>
+        </div>
       </div>
 
       <Toast />

@@ -85,7 +85,7 @@ export function Provider({ children }: { children: ReactNode }) {
   const [role, setRoleS] = useState<Role>("rh");
   const [page, setPage] = useState<Page>("overview");
   const [query, setQuery] = useState<Record<string, string>>({});
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [employees, setEmp] = useState<Employee[]>(employees0);
   const [allOccs, setOccs] = useState<Occ[]>(occurrences0);
   const [allRecs, setRecs] = useState<Rec[]>(records0);
