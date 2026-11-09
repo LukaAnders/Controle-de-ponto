@@ -282,12 +282,14 @@ export default function Assistant() {
             console.warn("Aviso /api/assistente:", apiErrorNote);
           }
         }
+      } catch {
+        apiErrorNote = "A API n√£o respondeu a tempo ou est√° indispon√≠vel.";
       } finally {
         clearTimeout(timeoutId);
       }
-      apiErrorNote = "A API n„o respondeu a tempo ou est· indisponÌvel.";
-      apiErrorNote = "A API n„o respondeu a tempo ou est· indisponÌvel.";
-      apiErrorNote = "A API n„o respondeu a tempo ou est· indisponÌvel.";
+    } catch {
+      apiErrorNote = "A API n√£o respondeu a tempo ou est√° indispon√≠vel.";
+    }
 
     try {
       if (!resp) {
