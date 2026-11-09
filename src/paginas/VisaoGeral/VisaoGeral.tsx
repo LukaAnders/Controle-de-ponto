@@ -43,10 +43,6 @@ export default function Overview() {
       <div className="overview-top-bar">
         <div className="overview-title-block">
           <h1>Visão operacional e indicadores</h1>
-          <p className="sub">
-            Central de resultados, análise gráfica e modelos de relatórios da
-            gestão de jornada
-          </p>
         </div>
 
         <div className="overview-top-actions">
