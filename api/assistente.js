@@ -63,15 +63,20 @@ Retorne APENAS um objeto JSON válido com exatamente estas propriedades:
 }
 (Nota: em "links", o campo "page" deve ser apenas um destes: "overview", "punch", "employees" ou "occurrences").`;
 
-    const tryGenerate = async (model, disableThinking) => {
+    const tryGenerate = async (model) => {
       const generationConfig = {
-        temperature: 0.2,
-        maxOutputTokens: 512,
-        ...(disableThinking ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+        maxOutputTokens: 256,
       };
 
+      // Gemini 3 uses thinkingLevel; use a low reasoning level for latency.
+      if (/^gemini-3\.(5|6|7|8)-flash/.test(model)) {
+        generationConfig.thinkingConfig = {
+          thinkingLevel: model.startsWith("gemini-3.8-") || model.startsWith("gemini-3.7-") ? "low" : "minimal",
+        };
+      }
+
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 55000);
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
       let response;
       try {
         response = await fetch(
@@ -135,23 +140,27 @@ Retorne APENAS um objeto JSON válido com exatamente estas propriedades:
     // 1. Tenta direto os modelos mais rápidos (sem gastar tempo listando antes)
     const configuredModel = process.env.GEMINI_MODEL || "gemini-3.8-flash";
     const fastCandidates = [
-      { model: configuredModel, disableThinking: true },
-      ...(configuredModel === "gemini-flash-latest"
+      { model: configuredModel },
+      ...(configuredModel === "gemini-3.8-flash"
         ? []
-        : [{ model: "gemini-flash-latest", disableThinking: true }]),
+        : [{ model: "gemini-3.8-flash" }]),
     ];
 
     const errors = [];
 
     for (const item of fastCandidates) {
       try {
-        const result = await tryGenerate(item.model, item.disableThinking);
+        const result = await tryGenerate(item.model);
         if (result.ok) {
           return res.status(200).json(result.data);
         }
         errors.push(result.error);
       } catch (e) {
-        errors.push(`${item.model}: ${e instanceof Error ? e.message : "erro"}`);
+        errors.push(
+          `${item.model}: ${e instanceof Error ? e.message : "erro"}${
+            e?.name === "AbortError" ? " (timeout ao aguardar o Gemini)" : ""
+          }`,
+        );
       }
     }
 
