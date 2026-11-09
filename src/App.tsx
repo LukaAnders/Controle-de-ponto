@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { useApp } from "./context/AppContext";
-import Sidebar from "./components/Sidebar/Sidebar";
-import Header from "./components/Header/Header";
-import Toast from "./components/Toast/Toast";
-import PrivacyModal from "./components/PrivacyModal/PrivacyModal";
-import Overview from "./pages/Overview/Overview";
-import Punch from "./pages/Punch/Punch";
-import Employees from "./pages/Employees/Employees";
-import Occurrences from "./pages/Occurrences/Occurrences";
-import Assistant from "./pages/Assistant/Assistant";
+import { useApp } from "./contexto/ContextoApp";
+import Sidebar from "./componentes/BarraLateral/BarraLateral";
+import Header from "./componentes/Cabecalho/Cabecalho";
+import Toast from "./componentes/AvisoFlutuante/AvisoFlutuante";
+import PrivacyModal from "./componentes/ModalPrivacidade/ModalPrivacidade";
+import Overview from "./paginas/VisaoGeral/VisaoGeral";
+import Punch from "./paginas/Ponto/Ponto";
+import Employees from "./paginas/Funcionarios/Funcionarios";
+import Occurrences from "./paginas/Ocorrencias/Ocorrencias";
+import Assistant from "./paginas/Assistente/Assistente";
 
 export default function App() {
   const { page } = useApp();
