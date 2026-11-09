@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   if (!apiKey) {
     return res.status(503).json({
       error:
-        "Variável GEMINI_API_KEY não encontrada no servidor da Vercel. Verifique em Settings > Environment Variables se o nome está como GEMINI_API_KEY e faça um Redeploy.",
+        "Variável GEMINI_API_KEY não encontrada no servidor da Vercel.",
     });
   }
 
@@ -30,7 +30,7 @@ export default async function handler(req, res) {
 
     const prompt = `Você é o Assistente Operacional interno do sistema PontoNexo (sistema de controle de ponto e gestão de jornada).
 Sua função é responder dúvidas operacionais de forma clara, objetiva, administrativa e em português (pt-BR).
-Mesmo se o usuário fizer uma saudação ou pergunta aberta (como "Olá", "Gemini?", "Quem é você?", "Está funcionando?"), responda cordialmente confirmando que o Assistente Operacional integrado ao Gemini está ativo e explicando como pode ajudar com base nos dados atuais do perfil dele.
+Se o usuário fizer qualquer saudação ou pergunta aberta (como "Olá", "Gemini?", "Quem é você?", "Está funcionando?"), responda cordialmente confirmando que você é o Assistente Operacional do PontoNexo (conectado ao Google Gemini) e explique como pode ajudar na rotina de ponto com base nos dados atuais do perfil dele.
 
 Regras do sistema PontoNexo:
 1. Modalidades de ponto na Central de Ponto (página "punch"):
@@ -51,61 +51,125 @@ ${JSON.stringify(context || {}, null, 2)}
 
 Pergunta do usuário: "${question}"
 
-Retorne APENAS um objeto JSON válido (sem blocos markdown \`\`\`json) com exatamente estas propriedades:
+Retorne APENAS um objeto JSON válido com exatamente estas propriedades:
 {
   "intent": "título curto e direto da orientação",
   "generalGuidance": "explicação clara da resposta no PontoNexo. Se houver passos, enumere como (1) ..., (2) ..., (3) ...",
   "userContextInfo": "observação personalizada com base no perfil atual do usuário e nos dados do contexto enviado",
   "links": [
-    { "label": "texto curto do botão", "page": "punch" }
+    { "label": "Abrir Central de Ponto", "page": "punch" }
   ]
 }
 (Nota: em "links", o campo "page" deve ser apenas um destes: "overview", "punch", "employees" ou "occurrences").`;
 
-    const models = ["gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash"];
-    let lastError = "";
+    // 1. Descobre automaticamente os modelos disponíveis na chave do usuário
+    let candidateModels = [
+      "gemini-2.5-flash",
+      "gemini-2.5-flash-lite",
+      "gemini-3-flash-preview",
+      "gemini-2.0-flash",
+      "gemini-flash-latest",
+    ];
 
-    for (const model of models) {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [
-              {
-                role: "user",
-                parts: [{ text: prompt }],
-              },
-            ],
-            generationConfig: {
-              temperature: 0.2,
-              responseMimeType: "application/json",
-            },
-          }),
-        },
+    try {
+      const listRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
       );
+      if (listRes.ok) {
+        const listData = await listRes.json();
+        const available = (listData.models || [])
+          .filter(
+            (m) =>
+              Array.isArray(m.supportedGenerationMethods) &&
+              m.supportedGenerationMethods.includes("generateContent") &&
+              m.name.includes("gemini"),
+          )
+          .map((m) => m.name.replace(/^models\//, ""));
 
-      if (!response.ok) {
-        lastError = `${model} (${response.status}): ${await response.text()}`;
-        continue;
+        if (available.length > 0) {
+          // Prioriza modelos flash disponíveis na conta
+          const flashModels = available.filter((n) => n.includes("flash"));
+          const otherModels = available.filter((n) => !n.includes("flash"));
+          candidateModels = [...flashModels, ...otherModels];
+        }
       }
+    } catch {
+      // Se falhar a listagem, mantém a lista padrão
+    }
 
-      const data = await response.json();
-      const rawText =
-        data?.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-      const cleanJson = rawText
-        .replace(/^```json\s*/i, "")
-        .replace(/^```\s*/i, "")
-        .replace(/\s*```$/, "")
-        .trim();
+    const errors = [];
 
-      const parsed = JSON.parse(cleanJson);
-      return res.status(200).json(parsed);
+    for (const model of candidateModels.slice(0, 5)) {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [
+                {
+                  role: "user",
+                  parts: [{ text: prompt }],
+                },
+              ],
+              generationConfig: {
+                temperature: 0.2,
+              },
+            }),
+          },
+        );
+
+        if (!response.ok) {
+          const errTxt = await response.text();
+          errors.push(`${model} (${response.status}): ${errTxt.slice(0, 140)}`);
+          continue;
+        }
+
+        const data = await response.json();
+        const parts = data?.candidates?.[0]?.content?.parts || [];
+        const rawText = parts
+          .map((p) => p.text || "")
+          .join("\n")
+          .trim();
+
+        if (!rawText) {
+          errors.push(`${model}: resposta vazia`);
+          continue;
+        }
+
+        // Extrai o bloco JSON mesmo se vier com texto ou markdown em volta
+        const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            const parsed = JSON.parse(jsonMatch[0]);
+            if (parsed.intent && parsed.generalGuidance) {
+              return res.status(200).json(parsed);
+            }
+          } catch {
+            // Se o JSON interno tiver formatação inválida, usa o texto direto abaixo
+          }
+        }
+
+        // Fallback caso o Gemini responda em texto corrido em vez de JSON
+        return res.status(200).json({
+          intent: "Orientação do Assistente Operacional",
+          generalGuidance: rawText.replace(/```json|```/g, "").trim(),
+          userContextInfo: `Resposta gerada para o perfil ${context?.resumoPerfil || "atual"}.`,
+          links: [
+            { label: "Abrir Central de Ponto", page: "punch" },
+            { label: "Ver Ocorrências e Justificativas", page: "occurrences" },
+          ],
+        });
+      } catch (loopErr) {
+        errors.push(
+          `${model}: ${loopErr instanceof Error ? loopErr.message : "erro"}`,
+        );
+      }
     }
 
     return res.status(502).json({
-      error: `Falha na API Gemini: ${lastError}`,
+      error: `Não foi possível gerar resposta (${errors.join(" | ")})`,
     });
   } catch (err) {
     return res.status(500).json({
