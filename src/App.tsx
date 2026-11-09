@@ -9,8 +9,18 @@ import Punch from "./paginas/Ponto/Ponto";
 import Employees from "./paginas/Funcionarios/Funcionarios";
 import Occurrences from "./paginas/Ocorrencias/Ocorrencias";
 import Assistant from "./paginas/Assistente/Assistente";
+import AssistantWidget from "./paginas/Assistente/AssistantWidget";
+import { AssistantChatProvider } from "./paginas/Assistente/AssistantChatContext";
 
 export default function App() {
+  return (
+    <AssistantChatProvider>
+      <AppContent />
+    </AssistantChatProvider>
+  );
+}
+
+function AppContent() {
   const { page } = useApp();
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
@@ -37,6 +47,7 @@ export default function App() {
       </div>
 
       <Toast />
+      <AssistantWidget />
       <PrivacyModal
         open={showPrivacyModal}
         onClose={() => setShowPrivacyModal(false)}

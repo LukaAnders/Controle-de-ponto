@@ -55,7 +55,6 @@ export default function Sidebar({ onOpenPrivacy }: SidebarProps) {
   ).length;
 
   const mainPages = roles[role].pages.filter((p) => p !== "assistant");
-  const hasAssistant = roles[role].pages.includes("assistant");
 
   return (
     <aside
@@ -88,24 +87,6 @@ export default function Sidebar({ onOpenPrivacy }: SidebarProps) {
           </button>
         ))}
 
-        {hasAssistant && (
-          <>
-            <div className="nav-divider" />
-            <div className="nav-section-label">INTELIGÊNCIA E GOVERNANÇA</div>
-            <button
-              type="button"
-              className={`nav-btn ${page === "assistant" ? "active" : ""}`}
-              aria-current={page === "assistant" ? "page" : undefined}
-              onClick={() => go("assistant")}
-            >
-              <span className="nav-btn-left">
-                {pageIcons.assistant}
-                <span>{pageNames.assistant}</span>
-              </span>
-              <span className="nav-tag">IA</span>
-            </button>
-          </>
-        )}
 
         <button
           type="button"
