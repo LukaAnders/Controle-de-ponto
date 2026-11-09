@@ -1,6 +1,22 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { Employee, Occ, OccStatus, Page, Rec, Role } from "../tipos";
 import { employees0, occurrences0, records0, now } from "../dados/dadosSimulados";
+import {
+  isTerminalStatus,
+  OccurrenceAction,
+  roleHasPermission,
+} from "../paginas/Ocorrencias/regrasOcorrencia";
+
+const actionByResultStatus: Partial<Record<OccStatus, OccurrenceAction>> = {
+  Aprovada: "aprovar",
+  Rejeitada: "rejeitar",
+  "Em análise": "solicitar-informacoes",
+  "Encaminhada para revisão": "encaminhar-para-revisao",
+};
+
+function actionFromResultStatus(status: OccStatus): OccurrenceAction | null {
+  return actionByResultStatus[status] ?? null;
+}
 
 const STORAGE_KEYS = {
   role: "pontonexo_role_v1",
@@ -212,6 +228,22 @@ export function Provider({ children }: { children: ReactNode }) {
     actOcc: (id, s, label, note) => {
       const oc = allOccs.find((x) => x.id === id);
       if (!oc) return;
+
+      if (isTerminalStatus(oc.status)) {
+        notify(
+          `Ação não realizada: a ocorrência já está finalizada com status "${oc.status}".`,
+        );
+        return;
+      }
+
+      const action = actionFromResultStatus(s);
+      if (!action || !roleHasPermission(role, action)) {
+        notify(
+          `Ação não autorizada para o perfil ${roles[role].shortLabel}. Nenhuma alteração foi realizada.`,
+        );
+        return;
+      }
+
       setOccs((l) =>
         l.map((x) =>
           x.id === id
