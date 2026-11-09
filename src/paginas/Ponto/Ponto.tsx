@@ -42,16 +42,12 @@ export default function Punch() {
       <div className="page-header">
         <div>
           <h1>Central de Ponto</h1>
-          <p className="sub">
-            Simule e compare as três modalidades de registro de jornada e
-            controle de acesso. Todas as interações são locais e demonstrativas.
-          </p>
         </div>
         <div
           className="clock-pill"
           aria-label="Horário demonstrativo do sistema"
         >
-          <span>Horário do servidor simulado:</span>
+          <span>Horário do servidor:</span>
           <strong>{now()}</strong>
         </div>
       </div>
