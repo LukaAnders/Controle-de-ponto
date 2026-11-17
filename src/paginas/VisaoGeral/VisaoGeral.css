@@ -1193,3 +1193,610 @@
     text-align: left;
   }
 }
+
+
+/* ==========================================================================
+   Refinamento Visão Geral — KPIs, Pendências Compactas, Gráficos e Atividades
+   ========================================================================== */
+
+.kpi-clickable {
+  background: transparent;
+  border-top: 0;
+  border-bottom: 0;
+  border-left: 0;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.kpi-clickable:hover {
+  background: #f8fafc;
+}
+
+.kpi-label-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--mut);
+}
+
+.kpi-label-with-icon svg {
+  color: var(--navy);
+  opacity: 0.78;
+  flex-shrink: 0;
+}
+
+.kpi-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-summary-value.is-warn {
+  color: var(--warn);
+}
+
+.kpi-delta-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 99px;
+}
+
+.kpi-delta-pill.up {
+  background: var(--ok-bg);
+  color: var(--ok-tx);
+}
+
+.kpi-delta-pill.down {
+  background: var(--warn-bg);
+  color: var(--warn-tx);
+}
+
+.kpi-delta-pill.flat {
+  background: #f1f5f9;
+  color: var(--mut);
+}
+
+.kpi-sub-metric {
+  font-size: 12px;
+  color: var(--mut);
+  font-weight: 500;
+}
+
+.kpi-meta-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  font-size: 12px;
+  color: var(--mut);
+  padding-top: 2px;
+}
+
+.kpi-meta-grid strong {
+  color: var(--tx);
+  font-weight: 600;
+}
+
+.kpi-meta-grid .tx-blue,
+.kpi-meta-grid .tx-blue strong {
+  color: var(--blue);
+}
+
+/* Pendências que precisam de atenção (cards compactos) */
+.pendency-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px 18px;
+}
+
+@media (max-width: 1120px) {
+  .pendency-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .pendency-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pendency-compact-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: left;
+  font: inherit;
+  background: #ffffff;
+  border: 1px solid var(--bd);
+  border-left-width: 3px;
+  border-radius: 6px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.pendency-compact-card:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.pendency-compact-card.tone-bad {
+  border-left-color: var(--bad);
+}
+
+.pendency-compact-card.tone-warn {
+  border-left-color: var(--warn);
+}
+
+.pendency-compact-card.tone-info {
+  border-left-color: var(--blue);
+}
+
+.pendency-compact-card.tone-clear {
+  border-left-color: var(--ok);
+  background: #fcfcfd;
+}
+
+.pendency-card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pendency-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: var(--navy);
+  flex-shrink: 0;
+}
+
+.pendency-compact-card.tone-bad .pendency-card-icon {
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+
+.pendency-compact-card.tone-warn .pendency-card-icon {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+
+.pendency-compact-card.tone-info .pendency-card-icon {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.pendency-compact-card.tone-clear .pendency-card-icon {
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+
+.pendency-card-count {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.pendency-card-status {
+  margin-left: auto;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--mut);
+}
+
+.pendency-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pendency-card-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--tx);
+}
+
+.pendency-card-sub {
+  font-size: 12px;
+  color: var(--mut);
+  line-height: 1.35;
+}
+
+.pendency-card-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--blue);
+}
+
+/* Gráfico de Frequência por Funcionário (horizontal com linha de meta) */
+.emp-freq-chart-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.emp-freq-axis-header {
+  display: grid;
+  grid-template-columns: 145px 1fr 44px;
+  align-items: center;
+  gap: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--mut);
+  padding: 0 6px;
+}
+
+.emp-freq-scale {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+}
+
+.emp-freq-meta-label {
+  color: var(--ok-tx);
+  font-weight: 700;
+}
+
+.emp-freq-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.emp-freq-row {
+  display: grid;
+  grid-template-columns: 145px 1fr 44px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  padding: 5px 6px;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 0.14s ease, border-color 0.14s ease;
+}
+
+.emp-freq-row:hover,
+.emp-freq-row.hovered {
+  background: #f8fafc;
+  border-color: var(--bd);
+}
+
+.emp-freq-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.emp-freq-info strong {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--tx);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.emp-freq-info small {
+  font-size: 11px;
+  color: var(--mut);
+}
+
+.emp-freq-bar-area {
+  position: relative;
+  height: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.emp-freq-track {
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.emp-freq-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.25s ease;
+}
+
+.emp-freq-fill.tone-ok {
+  background: #16a34a;
+}
+
+.emp-freq-fill.tone-warn {
+  background: var(--blue);
+}
+
+.emp-freq-fill.tone-bad {
+  background: #d97706;
+}
+
+.emp-freq-target-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #15803d;
+  opacity: 0.7;
+  z-index: 2;
+}
+
+.emp-freq-pct {
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.emp-freq-pct.tone-ok {
+  color: var(--ok-tx);
+}
+
+.emp-freq-pct.tone-warn {
+  color: var(--blue);
+}
+
+.emp-freq-pct.tone-bad {
+  color: var(--warn-tx);
+}
+
+.chart-detail-bar {
+  background: #f8fafc;
+  border: 1px solid var(--bd);
+  border-radius: 5px;
+  padding: 7px 10px;
+  font-size: 12px;
+  color: var(--mut);
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+}
+
+.chart-detail-bar strong {
+  color: var(--navy);
+}
+
+.chart-empty-state {
+  padding: 20px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--mut);
+}
+
+/* Gráfico de Evolução Temporal */
+.trend-chart-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.trend-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #f8fafc;
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+}
+
+.trend-axis-label {
+  font-size: 10.5px;
+  fill: #64748b;
+  font-weight: 600;
+}
+
+.trend-axis-sub {
+  font-size: 9px;
+  fill: #94a3b8;
+}
+
+.trend-point-group {
+  cursor: pointer;
+}
+
+.trend-point-val {
+  font-size: 10px;
+  font-weight: 700;
+  fill: var(--navy);
+}
+
+.legend-line-ref {
+  display: inline-block;
+  width: 12px;
+  height: 0;
+  border-top: 2px dashed #16a34a;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+/* Grid inferior dividido (Ocorrências por tipo + Modalidades) */
+.charts-grid-bottom-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.charts-grid-bottom-split > .chart-panel:first-child {
+  border-right: 1px solid var(--bd);
+}
+
+@media (max-width: 980px) {
+  .charts-grid-bottom-split {
+    grid-template-columns: 1fr;
+  }
+  .charts-grid-bottom-split > .chart-panel:first-child {
+    border-right: 0;
+    border-bottom: 1px solid var(--bd);
+  }
+}
+
+.donut-legend-clickable {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 0.14s ease, border-color 0.14s ease;
+}
+
+.donut-legend-clickable:hover,
+.donut-legend-clickable.hovered {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+}
+
+/* Atividades recentes */
+.activities-feed {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.activities-feed li + li {
+  border-top: 1px solid var(--bd);
+}
+
+.activity-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 18px;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: background-color 0.14s ease;
+}
+
+.activity-row:hover {
+  background: #f8fafc;
+}
+
+.activity-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: #f1f5f9;
+  color: var(--navy);
+}
+
+.activity-icon.tone-ok {
+  background: var(--ok-bg);
+  color: var(--ok-tx);
+}
+
+.activity-icon.tone-warn {
+  background: var(--warn-bg);
+  color: var(--warn-tx);
+}
+
+.activity-icon.tone-bad {
+  background: var(--bad-bg);
+  color: var(--bad-tx);
+}
+
+.activity-icon.tone-info {
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.activity-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.activity-top-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.activity-type {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.activity-time {
+  font-size: 11.5px;
+  color: var(--mut);
+  font-variant-numeric: tabular-nums;
+}
+
+.activity-desc {
+  margin: 0;
+  font-size: 13px;
+  color: var(--tx);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.activity-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.activity-arrow {
+  color: var(--mut);
+}
+
+.activities-empty {
+  padding: 20px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--mut);
+}
+
+@media (max-width: 640px) {
+  .emp-freq-axis-header,
+  .emp-freq-row {
+    grid-template-columns: 110px 1fr 38px;
+    gap: 6px;
+  }
+  .activity-row {
+    padding: 10px 14px;
+  }
+  .activity-right {
+    display: none;
+  }
+}

@@ -7,6 +7,7 @@ import ResumoDiscussaoPeriodo from "./componentes/ResumoDiscussaoPeriodo";
 import SecaoRelatoriosDisponiveis from "./componentes/SecaoRelatoriosDisponiveis";
 import RhPrioritiesTable from "./componentes/TabelaPrioridadesRh";
 import LiveTeamSidebar from "./componentes/PainelEquipeAoVivo";
+import AtividadesRecentes from "./componentes/AtividadesRecentes";
 import { PeriodKey, computeDashboardAnalytics } from "./dadosAnaliticos";
 import "./VisaoGeral.css";
 
@@ -146,16 +147,30 @@ export default function Overview() {
         </div>
       </div>
 
-      {/* C. Indicadores principais (Frequência, Horas, Ocorrências, Modalidades) */}
-      <KpiCards analytics={analytics} />
+      {/* C. Indicadores principais (Frequência, Horas, Ocorrências, Registros) */}
+      <KpiCards analytics={analytics} go={go} />
 
-      {/* D. Gráficos analíticos (Frequência, Horas trabalhadas, Ocorrências por tipo e Modalidades) */}
+      {/* D. Pendências prioritárias para o RH */}
+      <RhPrioritiesTable openOccs={openOccs} go={go} />
+
+      {/* E. Área de análise gráfica */}
       <PainelGraficosAnaliticos analytics={analytics} go={go} />
 
-      {/* E. Resultados e Discussão (Interpretação objetiva dos dados do período) */}
+      {/* F. Atividades recentes do sistema */}
+      <AtividadesRecentes activities={analytics.recentActivities} go={go} />
+
+      {/* G. Situação dos funcionários (tabela administrativa nominal preservada) */}
+      <LiveTeamSidebar
+        employees={filteredEmployees}
+        recs={recs}
+        openOccs={openOccs}
+        go={go}
+      />
+
+      {/* H. Resultados e Discussão (Interpretação objetiva dos dados do período) */}
       <ResumoDiscussaoPeriodo analytics={analytics} />
 
-      {/* F. Modelos de Relatórios disponíveis com filtros e exportação CSV */}
+      {/* I. Modelos de Relatórios disponíveis com filtros e exportação CSV */}
       <SecaoRelatoriosDisponiveis
         employees={employees}
         occs={occs}
@@ -166,17 +181,6 @@ export default function Overview() {
         role={role}
         notify={notify}
       />
-
-      {/* G. Situação dos funcionários (tabela administrativa nominal preservada) */}
-      <LiveTeamSidebar
-        employees={filteredEmployees}
-        recs={recs}
-        openOccs={openOccs}
-        go={go}
-      />
-
-      {/* H. Pendências de ponto (listagem organizada para o RH preservada) */}
-      <RhPrioritiesTable openOccs={openOccs} go={go} />
     </div>
   );
 }

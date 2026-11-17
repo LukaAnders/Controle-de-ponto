@@ -3,6 +3,23 @@ import { formatDateBR, typeLabel } from "../../dados/dadosSimulados";
 
 export type PeriodKey = "dia" | "semana" | "mes";
 
+export const ATTENDANCE_TARGET_PCT = 95;
+
+export interface RecentActivityItem {
+  id: string;
+  category: "ponto" | "acesso" | "solicitacao" | "aprovacao" | "reprovacao" | "correcao";
+  typeLabel: string;
+  description: string;
+  employeeName: string;
+  empId: string;
+  time: string;
+  timestamp: number;
+  status: string;
+  tone: "ok" | "warn" | "bad" | "info" | "neutral";
+  targetPage: "punch" | "occurrences";
+  targetQuery?: Record<string, string>;
+}
+
 export interface EmployeeMetricsRow {
   emp: Employee;
   expectedDays: number;
@@ -58,16 +75,24 @@ export interface DashboardAnalytics {
   totalBalanceHours: number;
   totalOccurrences: number;
   openOccurrences: number;
+  resolvedOccurrences: number;
   incompleteCount: number;
+  openIncompleteCount: number;
   justificationsPendingCount: number;
+  justificationsInAnalysisCount: number;
+  openHomeOfficeCount: number;
   delaysAndAbsencesCount: number;
   homeOfficeRequestsCount: number;
   totalPunchRecords: number;
   totalAccessOnlyRecords: number;
+  attendanceTargetPct: number;
+  previousAttendancePct: number | null;
+  attendanceDeltaPct: number | null;
   employeeRows: EmployeeMetricsRow[];
   frequencySeries: FrequencyPoint[];
   occDistribution: OccDistributionItem[];
   modalityUsage: ModalityUsageItem[];
+  recentActivities: RecentActivityItem[];
   discussionInsights: {
     title: string;
     text: string;
@@ -151,6 +176,19 @@ export function formatHours(h: number, showSign = false): string {
   const mins = Math.round((abs - whole) * 60);
   if (mins === 0) return `${sign}${whole}h`;
   return `${sign}${whole}h${String(mins).padStart(2, "0")}m`;
+}
+
+function parseBrDateTime(value: string): number {
+  const match = value.match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})/);
+  if (!match) return 0;
+  const [, dd, mm, yyyy, hh, min] = match;
+  return new Date(
+    Number(yyyy),
+    Number(mm) - 1,
+    Number(dd),
+    Number(hh),
+    Number(min),
+  ).getTime();
 }
 
 export function computeDashboardAnalytics(
@@ -328,16 +366,26 @@ export function computeDashboardAnalytics(
   const openOccs = scopedOccs.filter(
     (o) => o.status === "Pendente" || o.status === "Em análise",
   );
+  const resolvedOccurrences = scopedOccs.length - openOccs.length;
   const incompleteCount = scopedOccs.filter(
+    (o) => o.type === "incompleto",
+  ).length;
+  const openIncompleteCount = openOccs.filter(
     (o) => o.type === "incompleto",
   ).length;
   const justificationsCount = scopedOccs.filter(
     (o) => o.type === "justificativa",
   ).length;
   const justificationsPendingCount = openOccs.filter(
-    (o) => o.type === "justificativa",
+    (o) => o.type === "justificativa" && o.status === "Pendente",
+  ).length;
+  const justificationsInAnalysisCount = openOccs.filter(
+    (o) => o.type === "justificativa" && o.status === "Em análise",
   ).length;
   const homeOfficeRequestsCount = scopedOccs.filter(
+    (o) => o.type === "homeoffice",
+  ).length;
+  const openHomeOfficeCount = openOccs.filter(
     (o) => o.type === "homeoffice",
   ).length;
 
@@ -566,6 +614,88 @@ export function computeDashboardAnalytics(
             },
           ];
 
+  // Comparação histórica baseada na própria série temporal (quando há janela anterior)
+  const previousAttendancePct =
+    period === "mes" && frequencySeries.length >= 2
+      ? frequencySeries[frequencySeries.length - 2].pct
+      : period === "semana" && frequencySeries.length >= 2
+        ? frequencySeries[0].pct
+        : null;
+  const attendanceDeltaPct =
+    previousAttendancePct !== null
+      ? attendancePct - previousAttendancePct
+      : null;
+
+  // Atividades recentes extraídas exclusivamente dos registros e histórico de ocorrências
+  const empById = new Map(employees.map((e) => [e.id, e]));
+  const recentActivities: RecentActivityItem[] = [];
+
+  scopedRecs.forEach((rec) => {
+    const emp = empById.get(rec.empId);
+    const empName = emp?.name ?? "Colaborador";
+    const isAccess = rec.kind === "Evento de acesso";
+    recentActivities.push({
+      id: `rec-${rec.id}`,
+      category: isAccess ? "acesso" : "ponto",
+      typeLabel: isAccess ? "Acesso físico" : `Ponto · ${rec.modality}`,
+      description: `${empName} — ${rec.detail || rec.kind}`,
+      employeeName: empName,
+      empId: rec.empId,
+      time: rec.time,
+      timestamp: parseBrDateTime(rec.time),
+      status: rec.status,
+      tone: isAccess ? "neutral" : "info",
+      targetPage: "punch",
+    });
+  });
+
+  scopedOccs.forEach((occ) => {
+    const emp = empById.get(occ.empId);
+    const empName = emp?.name ?? "Colaborador";
+    const lastEntry = occ.history[occ.history.length - 1];
+    const timeStr = lastEntry?.at || occ.requestedAt;
+    const actionLower = (lastEntry?.action || "").toLowerCase();
+
+    let category: RecentActivityItem["category"] = "solicitacao";
+    let typeLabelStr = "Solicitação de justificativa";
+    let tone: RecentActivityItem["tone"] = "warn";
+
+    if (occ.status === "Aprovada" || actionLower.includes("aprovar")) {
+      category = "aprovacao";
+      typeLabelStr = "Aprovação de ocorrência";
+      tone = "ok";
+    } else if (occ.status === "Rejeitada" || actionLower.includes("rejeitar")) {
+      category = "reprovacao";
+      typeLabelStr = "Ocorrência rejeitada";
+      tone = "bad";
+    } else if (occ.type === "incompleto") {
+      category = "correcao";
+      typeLabelStr = "Registro incompleto";
+      tone = "bad";
+    } else if (occ.type === "homeoffice") {
+      category = "solicitacao";
+      typeLabelStr = "Autorização home office";
+      tone = "info";
+    }
+
+    recentActivities.push({
+      id: `occ-${occ.id}`,
+      category,
+      typeLabel: typeLabelStr,
+      description: `${empName} — ${occ.summary}`,
+      employeeName: empName,
+      empId: occ.empId,
+      time: timeStr,
+      timestamp: parseBrDateTime(timeStr),
+      status: occ.status,
+      tone,
+      targetPage: "occurrences",
+      targetQuery: { sel: occ.id },
+    });
+  });
+
+  recentActivities.sort((a, b) => b.timestamp - a.timestamp);
+
   // Regras simples e determinísticas de Interpretação dos Resultados (Seção 7)
   const discussionInsights: DashboardAnalytics["discussionInsights"] = [];
 
@@ -639,16 +769,24 @@ export function computeDashboardAnalytics(
     totalBalanceHours,
     totalOccurrences: scopedOccs.length,
     openOccurrences: openOccs.length,
+    resolvedOccurrences,
     incompleteCount,
+    openIncompleteCount,
     justificationsPendingCount,
+    justificationsInAnalysisCount,
+    openHomeOfficeCount,
     delaysAndAbsencesCount,
     homeOfficeRequestsCount,
     totalPunchRecords,
     totalAccessOnlyRecords,
+    attendanceTargetPct: ATTENDANCE_TARGET_PCT,
+    previousAttendancePct,
+    attendanceDeltaPct,
     employeeRows,
     frequencySeries,
     occDistribution,
     modalityUsage,
+    recentActivities: recentActivities.slice(0, 8),
     discussionInsights,
   };
 }
