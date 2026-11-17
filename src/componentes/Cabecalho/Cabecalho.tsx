@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Menu, Bell } from "lucide-react";
 import { useApp, roles } from "../../contexto/ContextoApp";
 import { typeLabel } from "../../dados/dadosSimulados";
 import { Role } from "../../tipos";
@@ -33,30 +34,16 @@ export default function Header() {
           aria-label={
             sidebarCollapsed
               ? "Expandir menu lateral"
-              : "Ocultar menu lateral"
+              : "Recolher menu lateral"
           }
           aria-expanded={!sidebarCollapsed}
           title={
             sidebarCollapsed
               ? "Expandir menu lateral"
-              : "Ocultar menu lateral"
+              : "Recolher menu lateral"
           }
         >
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
-          >
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="18" x2="21" y2="18" />
-          </svg>
+          <Menu size={20} strokeWidth={2} aria-hidden="true" />
         </button>
 
         <div
@@ -111,20 +98,7 @@ export default function Header() {
             title="Notificações de pendências"
             onClick={() => setShowNotif((v) => !v)}
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
+            <Bell size={17} strokeWidth={2} aria-hidden="true" />
             <span className="header-notif-label">Notificações</span>
             {openOccs.length > 0 && (
               <span className="header-nav-counter">{openOccs.length}</span>
