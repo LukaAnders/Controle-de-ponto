@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
+import { Plus, FileText, Clock, AlertOctagon, CheckCircle2 } from "lucide-react";
 import { useApp, SELF } from "../../contexto/ContextoApp";
+import { isTerminalStatus } from "./regrasOcorrencia";
 import OccurrenceFilters from "./componentes/FiltrosOcorrencia";
 import OccurrenceTable from "./componentes/TabelaOcorrencias";
 import OccurrenceDetailPanel from "./componentes/PainelDetalheOcorrencia";
@@ -24,6 +26,14 @@ export default function Occurrences() {
 
   const getEmp = (id: string) => employees.find((e) => e.id === id);
 
+  const openCount = occs.filter(
+    (o) => o.status === "Pendente" || o.status === "Em análise",
+  ).length;
+  const highOpenCount = occs.filter(
+    (o) => !isTerminalStatus(o.status) && o.priority === "Alta",
+  ).length;
+  const closedCount = occs.filter((o) => isTerminalStatus(o.status)).length;
+
   const list = occs.filter((o) => {
     const emp = getEmp(o.empId);
     const matchStatus =
@@ -36,12 +46,24 @@ export default function Occurrences() {
     const matchPrio = !prioFilter || o.priority === prioFilter;
     const matchSearch =
       !search ||
-      (emp?.name + " " + o.summary + " " + o.justification)
+      `${emp?.name ?? ""} ${emp?.reg ?? ""} ${o.summary} ${o.justification}`
         .toLowerCase()
         .includes(search.toLowerCase());
 
     return matchStatus && matchType && matchDept && matchPrio && matchSearch;
   });
+
+  const hasActiveFilters = Boolean(
+    search || st || ty || deptFilter || prioFilter,
+  );
+
+  const clearFilters = () => {
+    setSt("");
+    setTy("");
+    setDeptFilter("");
+    setPrioFilter("");
+    setSearch("");
+  };
 
   const selectedOcc = occs.find((x) => x.id === sel) || null;
   const selectedEmp = selectedOcc ? getEmp(selectedOcc.empId) : undefined;
@@ -59,14 +81,95 @@ export default function Occurrences() {
         </div>
         <button
           type="button"
-          className="btn primary"
+          className="btn primary occ-new-btn"
           onClick={() => setShowNewModal(true)}
         >
-          + Nova justificativa
+          <Plus size={16} strokeWidth={2.2} aria-hidden="true" />
+          <span>Nova justificativa</span>
+        </button>
+      </div>
+
+      {/* Resumo operacional rápido (clicável para filtrar) */}
+      <div
+        className="occ-kpi-strip"
+        role="region"
+        aria-label="Resumo da fila de ocorrências"
+      >
+        <button
+          type="button"
+          className={`occ-kpi-card ${!hasActiveFilters ? "active" : ""}`}
+          onClick={clearFilters}
+        >
+          <span className="occ-kpi-icon">
+            <FileText size={16} aria-hidden="true" />
+          </span>
+          <div className="occ-kpi-copy">
+            <strong>{occs.length}</strong>
+            <span>Total registradas</span>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          className={`occ-kpi-card tone-warn ${
+            st === "abertas" && !prioFilter ? "active" : ""
+          }`}
+          onClick={() => {
+            setSt("abertas");
+            setPrioFilter("");
+          }}
+        >
+          <span className="occ-kpi-icon">
+            <Clock size={16} aria-hidden="true" />
+          </span>
+          <div className="occ-kpi-copy">
+            <strong>{openCount}</strong>
+            <span>Aguardando análise</span>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          className={`occ-kpi-card tone-bad ${
+            st === "abertas" && prioFilter === "Alta" ? "active" : ""
+          }`}
+          onClick={() => {
+            setSt("abertas");
+            setPrioFilter("Alta");
+          }}
+        >
+          <span className="occ-kpi-icon">
+            <AlertOctagon size={16} aria-hidden="true" />
+          </span>
+          <div className="occ-kpi-copy">
+            <strong>{highOpenCount}</strong>
+            <span>Prioridade alta em aberto</span>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          className={`occ-kpi-card tone-ok ${
+            st === "Aprovada" ? "active" : ""
+          }`}
+          onClick={() => {
+            setSt("Aprovada");
+            setPrioFilter("");
+          }}
+        >
+          <span className="occ-kpi-icon">
+            <CheckCircle2 size={16} aria-hidden="true" />
+          </span>
+          <div className="occ-kpi-copy">
+            <strong>{closedCount}</strong>
+            <span>Concluídas</span>
+          </div>
         </button>
       </div>
 
       <OccurrenceFilters
+        allOccs={occs}
+        filteredCount={list.length}
         search={search}
         setSearch={setSearch}
         st={st}
@@ -78,13 +181,7 @@ export default function Occurrences() {
         prioFilter={prioFilter}
         setPrioFilter={setPrioFilter}
         role={role}
-        onClear={() => {
-          setSt("");
-          setTy("");
-          setDeptFilter("");
-          setPrioFilter("");
-          setSearch("");
-        }}
+        onClear={clearFilters}
       />
 
       <div className="split">
@@ -93,6 +190,8 @@ export default function Occurrences() {
           employees={employees}
           selectedId={selectedOcc?.id}
           onSelect={setSel}
+          hasActiveFilters={hasActiveFilters}
+          onClearFilters={clearFilters}
         />
 
         {selectedOcc && (

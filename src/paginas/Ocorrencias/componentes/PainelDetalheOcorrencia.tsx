@@ -1,32 +1,53 @@
 import { useState, useEffect } from "react";
+import {
+  X,
+  Check,
+  XCircle,
+  MessageSquareMore,
+  Forward,
+  Info,
+  Clock,
+} from "lucide-react";
 import { formatDateBR, typeLabel } from "../../../dados/dadosSimulados";
 import { Employee, Occ, OccStatus, Role } from "../../../tipos";
-import { isTerminalStatus } from "../regrasOcorrencia";
-import { statusBadgeClass } from "./TabelaOcorrencias";
+import { effectiveResponsibility, isTerminalStatus } from "../regrasOcorrencia";
+import {
+  priorityBadgeClass,
+  stageLabel,
+  statusBadgeClass,
+} from "./TabelaOcorrencias";
 
-const actionsList: { label: string; nextStatus: OccStatus; variant: string }[] =
-  [
-    {
-      label: "Aprovar",
-      nextStatus: "Aprovada",
-      variant: "primary",
-    },
-    {
-      label: "Rejeitar",
-      nextStatus: "Rejeitada",
-      variant: "danger",
-    },
-    {
-      label: "Solicitar info",
-      nextStatus: "Em análise",
-      variant: "",
-    },
-    {
-      label: "Revisão",
-      nextStatus: "Encaminhada para revisão",
-      variant: "",
-    },
-  ];
+const actionsList: {
+  label: string;
+  nextStatus: OccStatus;
+  variant: string;
+  icon: typeof Check;
+}[] = [
+  {
+    label: "Aprovar",
+    nextStatus: "Aprovada",
+    variant: "primary",
+    icon: Check,
+  },
+  {
+    label: "Rejeitar",
+    nextStatus: "Rejeitada",
+    variant: "danger",
+    icon: XCircle,
+  },
+  {
+    label: "Solicitar info",
+    nextStatus: "Em análise",
+    variant: "",
+    icon: MessageSquareMore,
+  },
+  {
+    label: "Revisão",
+    nextStatus: "Encaminhada para revisão",
+    variant: "",
+    icon: Forward,
+  },
+];
 
 interface OccurrenceDetailPanelProps {
   occurrence: Occ;
@@ -54,34 +75,47 @@ export default function OccurrenceDetailPanel({
     setActionNote("");
   }, [occurrence.id]);
 
+  const responsibility = effectiveResponsibility(occurrence);
+
   return (
     <aside
       className="card panel occ-detail-panel"
       aria-label={`Detalhes da ocorrência ${occurrence.id}`}
     >
       <div className="panel-header">
-        <div>
-          <span className="modality-tag">
-            {typeLabel[occurrence.type].toUpperCase()}
-          </span>
+        <div className="occ-detail-header-copy">
+          <div className="occ-detail-badges">
+            <span className="modality-tag">
+              {typeLabel[occurrence.type].toUpperCase()}
+            </span>
+            <span className={`badge ${priorityBadgeClass(occurrence.priority)}`}>
+              Prioridade {occurrence.priority}
+            </span>
+          </div>
           <h2>{occurrence.summary}</h2>
         </div>
-        <div className="row">
+        <div className="row" style={{ gap: 6, flexShrink: 0 }}>
           <span className={`badge ${statusBadgeClass(occurrence.status)}`}>
             {occurrence.status}
           </span>
-          <button type="button" className="btn" onClick={onClose}>
-            ✕
+          <button
+            type="button"
+            className="btn occ-close-btn"
+            aria-label="Fechar painel de detalhes"
+            onClick={onClose}
+          >
+            <X size={16} aria-hidden="true" />
           </button>
         </div>
       </div>
 
-      {/* Compact Meta Strip */}
+      {/* Metadados organizados em grade */}
       <div className="occ-summary-meta">
         <div>
           <small>Colaborador</small>
           <strong>
-            {employee?.name} ({employee?.dept})
+            {employee?.name ?? "—"}
+            {employee ? ` (${employee.dept} · Mat. ${employee.reg})` : ""}
           </strong>
         </div>
         <div>
@@ -90,39 +124,65 @@ export default function OccurrenceDetailPanel({
             {formatDateBR(occurrence.date)} · {occurrence.relatedTime}
           </strong>
         </div>
+        <div>
+          <small>Solicitado em</small>
+          <strong>{occurrence.requestedAt}</strong>
+        </div>
+        <div>
+          <small>Responsável atual</small>
+          <strong>
+            {responsibility
+              ? stageLabel[responsibility.current]
+              : "Concluída"}
+          </strong>
+        </div>
       </div>
 
-      {/* Justification */}
+      {/* Justificativa */}
       <div className="detail-block">
         <h3>Justificativa enviada</h3>
         <p className="quote-box">“{occurrence.justification}”</p>
+        {occurrence.notes && (
+          <p className="occ-notes-inline">
+            <strong>Observação:</strong> {occurrence.notes}
+          </p>
+        )}
       </div>
 
-      {/* Involved Records as Clean Chips */}
+      {/* Marcações envolvidas */}
       <div className="detail-block">
         <h3>Marcações do dia</h3>
         <div className="record-chips">
           {occurrence.involvedRecords.map((rec, idx) => (
             <span key={idx} className="record-chip">
-              {rec}
+              <Clock size={12} aria-hidden="true" />
+              <span>{rec}</span>
             </span>
           ))}
         </div>
       </div>
 
-      {/* Streamlined AI Support Block */}
+      {/* Bloco de apoio informativo (IA) */}
       <div className="note">
         <div className="ai-suggestion-header">
-          <strong>Sugestão do assistente (IA)</strong>
+          <span className="ai-title-with-icon">
+            <Info size={15} aria-hidden="true" />
+            <strong>Síntese operacional</strong>
+          </span>
           <span className="badge info">Apoio informativo</span>
         </div>
-        <p className="ai-compact-text">
-          {occurrence.aiAnalysis.problemSummary}{" "}
-          <b>Próximo passo sugerido:</b> {occurrence.aiAnalysis.nextSteps}
-        </p>
+        <p className="ai-compact-text">{occurrence.aiAnalysis.problemSummary}</p>
+        <div className="ai-sub-points">
+          <span>
+            <b>Verificar:</b> {occurrence.aiAnalysis.toVerify}
+          </span>
+          <span>
+            <b>Próximo passo:</b> {occurrence.aiAnalysis.nextSteps}
+          </span>
+        </div>
       </div>
 
-      {/* Actions for RH / Gestor */}
+      {/* Deliberação para RH / Gestor */}
       {role !== "funcionario" && (
         <div className="detail-block">
           <h3>Deliberação do RH / Liderança</h3>
@@ -176,22 +236,26 @@ export default function OccurrenceDetailPanel({
             </div>
           ) : (
             <div className="action-buttons-row">
-              {actionsList.map((act) => (
-                <button
-                  key={act.label}
-                  type="button"
-                  className={`btn ${act.variant}`}
-                  onClick={() => setPendAction(act)}
-                >
-                  {act.label}
-                </button>
-              ))}
+              {actionsList.map((act) => {
+                const Icon = act.icon;
+                return (
+                  <button
+                    key={act.label}
+                    type="button"
+                    className={`btn occ-decision-btn ${act.variant}`}
+                    onClick={() => setPendAction(act)}
+                  >
+                    <Icon size={14} aria-hidden="true" />
+                    <span>{act.label}</span>
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
       )}
 
-      {/* Compact Audit History */}
+      {/* Histórico */}
       <div className="detail-block">
         <h3>Histórico ({occurrence.history.length})</h3>
         <ul className="audit-timeline">

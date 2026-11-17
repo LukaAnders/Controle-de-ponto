@@ -118,7 +118,8 @@ export default function NewOccurrenceModal({
 
           <label style={{ gridColumn: "1 / -1" }}>
             Justificativa detalhada *
-            <input
+            <textarea
+              rows={3}
               placeholder="Descreva o motivo para análise do RH..."
               value={newJustification}
               onChange={(e) => setNewJustification(e.target.value)}

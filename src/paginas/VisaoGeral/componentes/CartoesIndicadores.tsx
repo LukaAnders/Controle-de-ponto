@@ -51,16 +51,6 @@ export default function KpiCards({ analytics, go }: KpiCardsProps) {
               <Users size={15} strokeWidth={2} aria-hidden="true" />
               <span className="admin-summary-label">Frequência no período</span>
             </span>
-            <span
-              className={`badge ${
-                analytics.attendancePct >= analytics.attendanceTargetPct
-                  ? "ok"
-                  : "warn"
-              }`}
-            >
-              {analytics.presentEmployeesCount}/{analytics.activeEmployeesCount}{" "}
-              presentes
-            </span>
           </div>
 
           <div className="kpi-value-row">
@@ -106,13 +96,7 @@ export default function KpiCards({ analytics, go }: KpiCardsProps) {
               <Clock size={15} strokeWidth={2} aria-hidden="true" />
               <span className="admin-summary-label">Horas registradas</span>
             </span>
-            <span
-              className={`badge ${
-                analytics.totalBalanceHours >= 0 ? "ok" : "warn"
-              }`}
-            >
-              Saldo: {formatHours(analytics.totalBalanceHours, true)}
-            </span>
+            
           </div>
 
           <div className="kpi-value-row">

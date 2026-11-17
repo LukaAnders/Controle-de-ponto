@@ -1,5 +1,14 @@
+import { AlertOctagon, FileText, Laptop, Eye, X, Inbox } from "lucide-react";
 import { formatDateBR, typeLabel } from "../../../dados/dadosSimulados";
-import { Employee, Occ, OccStatus, Priority } from "../../../tipos";
+import {
+  Employee,
+  Occ,
+  OccStatus,
+  OccType,
+  Priority,
+  ResponsibilityStage,
+} from "../../../tipos";
+import { effectiveResponsibility, isTerminalStatus } from "../regrasOcorrencia";
 
 export const statusBadgeClass = (s: OccStatus) => {
   switch (s) {
@@ -26,11 +35,26 @@ export const priorityBadgeClass = (p: Priority) => {
   }
 };
 
+export const stageLabel: Record<ResponsibilityStage, string> = {
+  colaborador: "Colaborador",
+  gestor: "Gestor",
+  rh: "RH",
+  "supervisao-administrativa": "Supervisão",
+};
+
+const typeIcon: Record<OccType, typeof FileText> = {
+  incompleto: AlertOctagon,
+  justificativa: FileText,
+  homeoffice: Laptop,
+};
+
 interface OccurrenceTableProps {
   list: Occ[];
   employees: Employee[];
   selectedId?: string;
   onSelect: (id: string) => void;
+  hasActiveFilters?: boolean;
+  onClearFilters?: () => void;
 }
 
 export default function OccurrenceTable({
@@ -38,6 +62,8 @@ export default function OccurrenceTable({
   employees,
   selectedId,
   onSelect,
+  hasActiveFilters,
+  onClearFilters,
 }: OccurrenceTableProps) {
   const getEmp = (id: string) => employees.find((e) => e.id === id);
 
@@ -49,14 +75,14 @@ export default function OccurrenceTable({
       .join("");
 
   return (
-    <div className="card scroll">
+    <div className="card scroll occ-table-card">
       <table>
         <thead>
           <tr>
             <th>Colaborador</th>
             <th>Ocorrência</th>
             <th>Data e Horário</th>
-            <th>Status e Prioridade</th>
+            <th>Status e Etapa</th>
             <th style={{ textAlign: "right" }}>Ação</th>
           </tr>
         </thead>
@@ -64,10 +90,17 @@ export default function OccurrenceTable({
           {list.map((x, idx) => {
             const emp = getEmp(x.empId);
             const isSelected = selectedId === x.id;
+            const TypeIcon = typeIcon[x.type];
+            const responsibility = effectiveResponsibility(x);
+            const isUrgentOpen =
+              x.priority === "Alta" && !isTerminalStatus(x.status);
+
             return (
               <tr
                 key={x.id}
-                className={isSelected ? "selected-row" : ""}
+                className={`${isSelected ? "selected-row" : ""} ${
+                  isUrgentOpen ? "occ-row-urgent" : ""
+                }`}
                 style={{ cursor: "pointer" }}
                 onClick={() => onSelect(isSelected ? "" : x.id)}
               >
@@ -87,21 +120,35 @@ export default function OccurrenceTable({
                   </div>
                 </td>
                 <td>
-                  <strong>{x.summary}</strong>
-                  <div className="cell-sub">{typeLabel[x.type]}</div>
+                  <div className="occ-title-cell">
+                    <span className={`occ-type-icon type-${x.type}`}>
+                      <TypeIcon size={14} strokeWidth={2} aria-hidden="true" />
+                    </span>
+                    <div>
+                      <strong>{x.summary}</strong>
+                      <div className="cell-sub">{typeLabel[x.type]}</div>
+                    </div>
+                  </div>
                 </td>
                 <td>
                   <strong>{formatDateBR(x.date)}</strong>
                   <div className="cell-sub">{x.relatedTime}</div>
                 </td>
                 <td>
-                  <div className="row" style={{ gap: 6 }}>
-                    <span className={`badge ${statusBadgeClass(x.status)}`}>
-                      {x.status}
-                    </span>
-                    <span className={`badge ${priorityBadgeClass(x.priority)}`}>
-                      {x.priority}
-                    </span>
+                  <div className="occ-status-cell">
+                    <div className="row" style={{ gap: 6 }}>
+                      <span className={`badge ${statusBadgeClass(x.status)}`}>
+                        {x.status}
+                      </span>
+                      <span className={`badge ${priorityBadgeClass(x.priority)}`}>
+                        {x.priority}
+                      </span>
+                    </div>
+                    {responsibility && (
+                      <span className="occ-stage-sub">
+                        Etapa: <strong>{stageLabel[responsibility.current]}</strong>
+                      </span>
+                    )}
                   </div>
                 </td>
                 <td
@@ -110,10 +157,22 @@ export default function OccurrenceTable({
                 >
                   <button
                     type="button"
-                    className={`btn ${isSelected ? "primary-outline" : ""}`}
+                    className={`btn occ-action-btn ${
+                      isSelected ? "primary-outline" : ""
+                    }`}
                     onClick={() => onSelect(isSelected ? "" : x.id)}
                   >
-                    {isSelected ? "Fechar" : "Ver detalhes"}
+                    {isSelected ? (
+                      <>
+                        <X size={14} aria-hidden="true" />
+                        <span>Fechar</span>
+                      </>
+                    ) : (
+                      <>
+                        <Eye size={14} aria-hidden="true" />
+                        <span>Detalhes</span>
+                      </>
+                    )}
                   </button>
                 </td>
               </tr>
@@ -122,7 +181,21 @@ export default function OccurrenceTable({
           {!list.length && (
             <tr>
               <td colSpan={5} className="empty-cell">
-                Nenhuma ocorrência encontrada com os filtros selecionados.
+                <div className="occ-empty-state">
+                  <Inbox size={22} strokeWidth={1.7} aria-hidden="true" />
+                  <span>
+                    Nenhuma ocorrência encontrada com os filtros selecionados.
+                  </span>
+                  {hasActiveFilters && onClearFilters && (
+                    <button
+                      type="button"
+                      className="btn"
+                      onClick={onClearFilters}
+                    >
+                      Limpar filtros
+                    </button>
+                  )}
+                </div>
               </td>
             </tr>
           )}
